@@ -10,62 +10,71 @@
 void I2CDevice::send(const std::vector<std::uint8_t> & tx_data)
 {
 	start();
-	printf("-----\n");
+	printf("----- tx\n");
 	for (const auto byte : tx_data)
 	{
-		send(byte);
+		if (!send(byte))
+		{
+			stop();
+			return;
+		}
 	}
-	printf("-----\n");
-	stop();
 }
 
-void I2CDevice::receive(const std::vector<std::uint8_t> & tx_data, std::vector<std::uint8_t> & rx_data)
+void I2CDevice::receive(
+	const std::vector<std::uint8_t> & tx_data,
+	std::vector<std::uint8_t>    &    rx_data)
 {
 	start();
-	printf("-----\n");
+	printf("----- tx\n");
 	for (const auto byte : tx_data)
 	{
-		send(byte);
+		if (!send(byte))
+		{
+			stop();
+			return;
+		}
 	}
-	printf("=====\n");
+	printf("===== rx\n");
 	for (std::size_t i = 0; i < rx_data.size(); i++)
 	{
-		rx_data[i] = receive();
+		rx_data[i] = receive((i + 1) < rx_data.size());
 	}
-	printf("-----\n");
 	stop();
 }
 
 std::uint8_t I2CDevice::send(const std::uint8_t byte)
 {
+	clock(0);
 	for (std::uint8_t bit = 0x80; bit != 0; bit >>= 1)
 	{
-		clock(0);
-		set_data((byte & bit) ? 1 : 0);
+		set_data(byte & bit);
 		clock(1);
+		clock(0);
 	}
-	clock(0);
-	set_data(1);
 
-	unsigned     timeout = 1000;
+	unsigned     to = 1;
 	std::uint8_t ack;
 
+	set_data(1);
+	clock(1);
 	do
 	{
-		clock(1);
 		ack = get_ack();
 	}
-	while (!ack && (--timeout > 0));
+	while (!ack && (to++ < timeout));
 	clock(0);
 	printf(">---- %02x\n", byte);
 
 	return ack;
 }
 
-std::uint8_t I2CDevice::receive()
+std::uint8_t I2CDevice::receive(const bool ack)
 {
 	std::uint8_t byte = 0;
 
+	clock(0);
+	set_data(1);
 	for (std::uint8_t bit = 0x80; bit != 0; bit >>= 1)
 	{
 		clock(1);
@@ -75,11 +84,18 @@ std::uint8_t I2CDevice::receive()
 		}
 		clock(0);
 	}
+
+	printf("----- %s\n", ack ? "ACK" : "NAK");
+	set_data(ack ? 0 : 1);
+	clock(1);
+	clock(0);
+
 	return byte;
 }
 
 void I2CDevice::start()
 {
+	printf("----- START\n");
 	clock(0);
 	set_data(1);
 	clock(1);
@@ -88,6 +104,10 @@ void I2CDevice::start()
 
 void I2CDevice::stop()
 {
-	set_data(0);
+	printf("----- STOP\n");
 	clock(0);
+	set_data(0);
+	clock(1);
+	set_data(1);
+	printf("----- <<\n");
 }

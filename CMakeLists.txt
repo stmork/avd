@@ -18,3 +18,9 @@ add_executable(${PROJECT_NAME}
 	i2cdevice.cc i2cdevice.h
 	dummyi2cdevice.h dummyi2cdevice.cc
 )
+
+add_custom_target(astyle
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	COMMAND astyle
+	*.cc *.h
+)

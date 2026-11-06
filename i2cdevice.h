@@ -13,6 +13,8 @@
 
 class I2CDevice
 {
+	unsigned timeout = 1000;
+
 public:
 	virtual void clock(const std::uint8_t state) = 0;
 	virtual void set_data(const std::uint8_t bit) = 0;
@@ -26,7 +28,7 @@ public:
 
 private:
 	std::uint8_t send(const std::uint8_t byte);
-	std::uint8_t receive();
+	std::uint8_t receive(const bool ack);
 	void start();
 	void stop();
 };

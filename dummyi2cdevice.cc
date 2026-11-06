@@ -39,5 +39,5 @@ void DummyI2cDevice::print() const
 {
 	printf("state: %u%u # dummy: %02x %02x\n",
 		state & SCL ? 1 : 0,
-		 state & SDA ? 1 : 0, byte, bit);
+		state & SDA ? 1 : 0, byte, bit);
 }
