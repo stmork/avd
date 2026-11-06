@@ -19,6 +19,7 @@ void I2CDevice::send(const std::vector<std::uint8_t> & tx_data)
 			return;
 		}
 	}
+	stop();
 }
 
 void I2CDevice::receive(
