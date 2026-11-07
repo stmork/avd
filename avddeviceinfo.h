@@ -47,18 +47,18 @@ typedef std::pair<decltype(AvdDeviceInfo::vendor_id), decltype(AvdDeviceInfo::pr
 class AutoConfigKey : public AutoConfigId
 {
 public:
-	constexpr AutoConfigKey() : AutoConfigId(0, 0)
+	explicit constexpr AutoConfigKey() : AutoConfigId(0, 0)
 	{
 	}
 
-	constexpr AutoConfigKey(
+	explicit constexpr AutoConfigKey(
 		decltype(AvdDeviceInfo::vendor_id)  vendor_id,
 		decltype(AvdDeviceInfo::product_id) product_id) :
 		AutoConfigId(vendor_id, product_id)
 	{
 	}
 
-	constexpr AutoConfigKey(const AvdDeviceInfo & info) :
+	explicit constexpr AutoConfigKey(const AvdDeviceInfo & info) :
 		AutoConfigId(info.vendor_id, info.product_id)
 	{
 	}

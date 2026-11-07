@@ -42,7 +42,7 @@ void DummyI2cDevice::set_dummy(const std::uint8_t dummy)
 
 void DummyI2cDevice::print() const
 {
-	printf("state: %u%u # dummy: %02x %02x\n",
-		state & SCL ? 1 : 0,
-		state & SDA ? 1 : 0, byte, bit);
+	printf("state: %d%d # dummy: %02x %02x\n",
+		(state & SCL) != 0 ? 1 : 0,
+		(state & SDA) != 0 ? 1 : 0, byte, bit);
 }

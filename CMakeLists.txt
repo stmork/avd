@@ -29,3 +29,18 @@ add_custom_target(astyle
 	COMMAND astyle
 	*.cc *.h
 )
+
+add_custom_target(cppcheck
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	COMMAND cppcheck
+	--inline-suppr
+	--suppress=unusedStructMember
+	--suppress=unreadVariable
+	--suppress=preprocessorErrorDirective
+	--enable=style,warning,performance,portability
+	--language=c++ --std=c++20
+	--library=qt
+	--xml-version=2 --force -q
+	*.cc *.h
+	2>cppcheck.xml
+)

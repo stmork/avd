@@ -26,7 +26,7 @@ VideoDeviceFactory::VideoDeviceFactory()
 	memset(io_addresses, 0xff, sizeof(io_addresses));
 
 #ifdef __amiga__
-	ExpansionBase = (struct ExpansionBase *)OpenLibrary("expansion.library", 0);
+	ExpansionBase = reinterpret_cast<struct ExpansionBase *>(OpenLibrary("expansion.library", 0));
 
 	if (ExpansionBase == nullptr)
 	{
