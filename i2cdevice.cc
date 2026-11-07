@@ -3,23 +3,21 @@
 //	SPDX-FileCopyrightText: Copyright (C) 2026 Steffen A. Mork
 //
 
+#include <algorithm>
 #include <cstdio>
 
 #include "i2cdevice.h"
 
-void I2CDevice::send(const std::vector<std::uint8_t> & tx_data)
+bool I2CDevice::send(const std::vector<std::uint8_t> & tx_data)
 {
 	I2CStartStop raii(this);
 
 	print("----- tx");
 
-	for (const auto byte : tx_data)
+	return std::all_of(tx_data.begin(), tx_data.end(), [this](const auto byte)
 	{
-		if (!send(byte))
-		{
-			return;
-		}
-	}
+		return send(byte);
+	});
 }
 
 void I2CDevice::receive(
@@ -29,13 +27,15 @@ void I2CDevice::receive(
 	I2CStartStop raii(this);
 
 	print("----- tx");
-	for (const auto byte : tx_data)
+	const bool success = std::all_of(tx_data.begin(), tx_data.end(), [this](const auto byte)
 	{
-		if (!send(byte))
-		{
-			return;
-		}
+		return send(byte);
+	});
+	if (!success)
+	{
+		return;
 	}
+
 	print("===== rx");
 	for (std::size_t i = 0; i < rx_data.size(); i++)
 	{

@@ -13,7 +13,7 @@ std::vector<std::uint8_t> tx_data   = { 0x8a, 0x00, 0x01, 0x02 };
 std::vector<std::uint8_t> rx_header = { 0x8b };
 std::vector<std::uint8_t> rx_data   = { 0 };
 
-#define _DEBUG
+#define no_DEBUG
 
 #ifdef _DEBUG
 static void TestDummy()

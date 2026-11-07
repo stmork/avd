@@ -33,7 +33,7 @@ class I2CDevice
 	};
 
 public:
-	void send(const std::vector<std::uint8_t> & tx_data);
+	bool send(const std::vector<std::uint8_t> & tx_data);
 	void receive(
 		const std::vector<std::uint8_t> & tx_data,
 		std::vector<std::uint8_t> & rx_data);
