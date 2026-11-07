@@ -13,6 +13,7 @@ std::vector<std::uint8_t> tx_data   = { 0x8a, 0x00, 0x01, 0x02 };
 std::vector<std::uint8_t> rx_header = { 0x8b };
 std::vector<std::uint8_t> rx_data   = { 0 };
 
+#ifdef _DEBUG
 static void TestDummy()
 {
 	DummyI2cDevice     device;
@@ -27,6 +28,7 @@ static void TestDummy()
 	}
 	printf("\n");
 }
+#endif
 
 int main()
 {
@@ -34,7 +36,9 @@ int main()
 	std::vector<std::uint8_t> y;
 	std::vector<std::uint8_t> uv;
 
-//	TestDummy();
+#ifdef _DEBUG
+	TestDummy();
+#endif
 	auto * device = factory.get()[0];
 
 	device->init();
