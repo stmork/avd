@@ -35,8 +35,6 @@ add_custom_target(cppcheck
 	COMMAND cppcheck
 	--inline-suppr
 	--suppress=unusedStructMember
-	--suppress=unreadVariable
-	--suppress=preprocessorErrorDirective
 	--enable=style,warning,performance,portability
 	--language=c++ --std=c++20
 	--library=qt

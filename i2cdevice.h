@@ -15,6 +15,23 @@ class I2CDevice
 {
 	unsigned timeout = 1000;
 
+	class I2CStartStop
+	{
+		I2CDevice * i2c_device;
+
+	public:
+		I2CStartStop() = delete;
+		explicit I2CStartStop(I2CDevice * i2c) : i2c_device(i2c)
+		{
+			i2c_device->start();
+		}
+
+		~I2CStartStop()
+		{
+			i2c_device->stop();
+		}
+	};
+
 public:
 	void send(const std::vector<std::uint8_t> & tx_data);
 	void receive(

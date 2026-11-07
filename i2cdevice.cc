@@ -9,30 +9,30 @@
 
 void I2CDevice::send(const std::vector<std::uint8_t> & tx_data)
 {
-	start();
+	I2CStartStop raii(this);
+
 	print("----- tx");
+
 	for (const auto byte : tx_data)
 	{
 		if (!send(byte))
 		{
-			stop();
 			return;
 		}
 	}
-	stop();
 }
 
 void I2CDevice::receive(
 	const std::vector<std::uint8_t> & tx_data,
 	std::vector<std::uint8_t>    &    rx_data)
 {
-	start();
+	I2CStartStop raii(this);
+
 	print("----- tx");
 	for (const auto byte : tx_data)
 	{
 		if (!send(byte))
 		{
-			stop();
 			return;
 		}
 	}
@@ -41,7 +41,6 @@ void I2CDevice::receive(
 	{
 		rx_data[i] = receive((i + 1) < rx_data.size());
 	}
-	stop();
 }
 
 void I2CDevice::print(const char * text) const
