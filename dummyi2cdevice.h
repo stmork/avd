@@ -22,13 +22,15 @@ class DummyI2cDevice : public I2CDevice
 public:
 	DummyI2cDevice() = default;
 
-	virtual void clock(const std::uint8_t scl) override;
-	virtual void set_data(const std::uint8_t sda) override;
+	void set_dummy(const std::uint8_t dummy);
+
+protected:
+	virtual void         clock(const std::uint8_t scl) override;
+	virtual void         set_data(const std::uint8_t sda) override;
 	virtual std::uint8_t get_ack() const override;
 	virtual std::uint8_t get_data() const override;
 
-	void set_dummy(const std::uint8_t dummy);
 	void print() const;
 };
 
-#endif // DUMMYI2CDEVICE_H
+#endif // AVD_DUMMYI2CDEVICE_H

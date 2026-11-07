@@ -16,21 +16,22 @@ class I2CDevice
 	unsigned timeout = 1000;
 
 public:
-	virtual void clock(const std::uint8_t state) = 0;
-	virtual void set_data(const std::uint8_t bit) = 0;
-	virtual std::uint8_t get_ack() const = 0;
-	virtual std::uint8_t get_data() const = 0;
-
 	void send(const std::vector<std::uint8_t> & tx_data);
 	void receive(
 		const std::vector<std::uint8_t> & tx_data,
 		std::vector<std::uint8_t> & rx_data);
 
+protected:
+	virtual void         clock(const std::uint8_t state) = 0;
+	virtual void         set_data(const std::uint8_t bit) = 0;
+	virtual std::uint8_t get_ack() const = 0;
+	virtual std::uint8_t get_data() const = 0;
+
 private:
 	std::uint8_t send(const std::uint8_t byte);
 	std::uint8_t receive(const bool ack);
-	void start();
-	void stop();
+	void         start();
+	void         stop();
 };
 
-#endif
+#endif // AVD_I2CDEVICE_H

@@ -17,8 +17,10 @@ include_directories(${GLOBAL_INCLUDE})
 
 add_executable(${PROJECT_NAME}
 	avd.cc
-	i2cdevice.cc i2cdevice.h
-	dummyi2cdevice.h dummyi2cdevice.cc
+	i2cdevice.cc      i2cdevice.h
+	dummyi2cdevice.cc dummyi2cdevice.h
+	amigavideodevice.cc amigavideodevice.h
+	avddeviceinfo.cc  avddeviceinfo.h
 )
 
 add_custom_target(astyle
