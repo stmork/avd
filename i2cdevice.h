@@ -28,6 +28,7 @@ protected:
 	virtual void         set_data(const std::uint8_t bit) = 0;
 	virtual std::uint8_t get_ack() const = 0;
 	virtual std::uint8_t get_data() const = 0;
+	virtual void         print(const char * text) const;
 
 private:
 	std::uint8_t send(const std::uint8_t byte);

@@ -28,6 +28,11 @@ std::uint8_t DummyI2cDevice::get_data() const
 	return result;
 }
 
+void DummyI2cDevice::print(const char * text) const
+{
+	printf("%s\n", text);
+}
+
 void DummyI2cDevice::set_dummy(const std::uint8_t dummy)
 {
 	byte = dummy;

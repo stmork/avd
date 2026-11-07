@@ -10,7 +10,7 @@
 void I2CDevice::send(const std::vector<std::uint8_t> & tx_data)
 {
 	start();
-	printf("----- tx\n");
+	print("----- tx");
 	for (const auto byte : tx_data)
 	{
 		if (!send(byte))
@@ -27,7 +27,7 @@ void I2CDevice::receive(
 	std::vector<std::uint8_t>    &    rx_data)
 {
 	start();
-	printf("----- tx\n");
+	print("----- tx");
 	for (const auto byte : tx_data)
 	{
 		if (!send(byte))
@@ -36,12 +36,17 @@ void I2CDevice::receive(
 			return;
 		}
 	}
-	printf("===== rx\n");
+	print("===== rx");
 	for (std::size_t i = 0; i < rx_data.size(); i++)
 	{
 		rx_data[i] = receive((i + 1) < rx_data.size());
 	}
 	stop();
+}
+
+void I2CDevice::print(const char * text) const
+{
+	(void)text;
 }
 
 std::uint8_t I2CDevice::send(const std::uint8_t byte)
@@ -65,7 +70,7 @@ std::uint8_t I2CDevice::send(const std::uint8_t byte)
 	}
 	while (!ack && (to++ < timeout));
 	clock(0);
-	printf(">---- %02x\n", byte);
+	print(">----");
 
 	return ack;
 }
@@ -86,7 +91,7 @@ std::uint8_t I2CDevice::receive(const bool ack)
 		clock(0);
 	}
 
-	printf("----- %s\n", ack ? "ACK" : "NAK");
+	print(ack ? "----- ACK" : "----- NAK");
 	set_data(ack ? 0 : 1);
 	clock(1);
 	clock(0);
@@ -96,7 +101,7 @@ std::uint8_t I2CDevice::receive(const bool ack)
 
 void I2CDevice::start()
 {
-	printf("----- START\n");
+	print("----- START");
 	clock(0);
 	set_data(1);
 	clock(1);
@@ -105,10 +110,10 @@ void I2CDevice::start()
 
 void I2CDevice::stop()
 {
-	printf("----- STOP\n");
+	print("----- STOP");
 	clock(0);
 	set_data(0);
 	clock(1);
 	set_data(1);
-	printf("----- <<\n");
+	print("----- <<");
 }

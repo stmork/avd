@@ -34,7 +34,7 @@ int main()
 	std::vector<std::uint8_t> y;
 	std::vector<std::uint8_t> uv;
 
-	TestDummy();
+//	TestDummy();
 	auto * device = factory.get()[0];
 
 	device->init();

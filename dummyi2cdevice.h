@@ -29,6 +29,7 @@ protected:
 	virtual void         set_data(const std::uint8_t sda) override;
 	virtual std::uint8_t get_ack() const override;
 	virtual std::uint8_t get_data() const override;
+	virtual void         print(const char * text) const override;
 
 	void print() const;
 };
