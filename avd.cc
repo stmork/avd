@@ -7,14 +7,15 @@
 #include <cstdio>
 
 #include "dummyi2cdevice.h"
+#include "videodevicefactory.h"
 
 std::vector<std::uint8_t> tx_data   = { 0x8a, 0x00, 0x01, 0x02 };
 std::vector<std::uint8_t> rx_header = { 0x8b };
 std::vector<std::uint8_t> rx_data   = { 0 };
 
-int main()
+static void TestDummy()
 {
-	DummyI2cDevice device;
+	DummyI2cDevice     device;
 
 	device.send(tx_data);
 	device.set_dummy(0xa5);
@@ -25,6 +26,26 @@ int main()
 		printf("%02x ", byte);
 	}
 	printf("\n");
+}
+
+int main()
+{
+	VideoDeviceFactory        factory;
+	std::vector<std::uint8_t> y;
+	std::vector<std::uint8_t> uv;
+
+	TestDummy();
+	auto * device = factory.get()[0];
+
+	device->init();
+	const std::uint8_t status = device->get_status_byte();
+
+	printf("Status: 0x%02x\n", status);
+	if (device->sync())
+	{
+		device->fill();
+		device->read_yuv(y, uv);
+	}
 
 	return EXIT_SUCCESS;
 }

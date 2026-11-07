@@ -41,15 +41,20 @@ struct AvdDeviceInfo
 };
 
 // This is a shortcut to of the key map.
-typedef std::pair <
-decltype(AvdDeviceInfo::vendor_id),
-		 decltype(AvdDeviceInfo::product_id) > AutoConfigId;
+typedef std::pair<decltype(AvdDeviceInfo::vendor_id), decltype(AvdDeviceInfo::product_id)> AutoConfigId;
 
 // This is a container to handle the hash value
 class AutoConfigKey : public AutoConfigId
 {
 public:
 	constexpr AutoConfigKey() : AutoConfigId(0, 0)
+	{
+	}
+
+	constexpr AutoConfigKey(
+		decltype(AvdDeviceInfo::vendor_id)  vendor_id,
+		decltype(AvdDeviceInfo::product_id) product_id) :
+		AutoConfigId(vendor_id, product_id)
 	{
 	}
 
