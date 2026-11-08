@@ -39,22 +39,25 @@ const std::vector<std::uint8_t> AmigaVideoDevice::SAA_NTSC
 **                                                                      **
 *************************************************************************/
 
-void AmigaVideoDevice::init()
+void AmigaVideoDevice::init(const bool pal, const bool short_delay)
 {
 	std::vector<std::uint8_t> saa_slave_receiver
 	{
-		0x8a, 0
+		SAA_SLAVE_ADDRESS, 0
 	};
 
-	saa_slave_receiver.insert(saa_slave_receiver.end(), SAA_short_delay.begin(), SAA_short_delay.end());
-	saa_slave_receiver.insert(saa_slave_receiver.end(), SAA_PAL.begin(), SAA_PAL.end());
+	const std::vector<std::uint8_t> & saa_delay = short_delay ? SAA_short_delay : SAA_long_delay;
+	const std::vector<std::uint8_t> & saa_video = pal ? SAA_PAL : SAA_NTSC;
+
+	saa_slave_receiver.insert(saa_slave_receiver.end(), saa_delay.begin(), saa_delay.end());
+	saa_slave_receiver.insert(saa_slave_receiver.end(), saa_video.begin(), saa_video.end());
 
 	send(saa_slave_receiver);
 }
 
 std::uint8_t AmigaVideoDevice::get_status_byte()
 {
-	static const std::vector<std::uint8_t> saa_slave_transmitter = { 0x8b };
+	static const std::vector<std::uint8_t> saa_slave_transmitter { SAA_SLAVE_ADDRESS | 1 };
 	std::vector<std::uint8_t> rx_data   = { 0 };
 
 	receive(saa_slave_transmitter, rx_data);
@@ -155,7 +158,7 @@ std::uint8_t AmigaVideoDevice::get_ack() const
 
 std::uint8_t AmigaVideoDevice::get_data() const
 {
-	return read<std::uint8_t>(AvdDeviceInfo::IoIndex::I2C_BUSRECEIVE);
+	return read<std::uint8_t>(AvdDeviceInfo::IoIndex::I2C_BUSRECEIVE) & SDA;
 }
 
 /*************************************************************************

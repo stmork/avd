@@ -13,7 +13,9 @@ std::vector<std::uint8_t> tx_data   = { 0x8a, 0x00, 0x01, 0x02 };
 std::vector<std::uint8_t> rx_header = { 0x8b };
 std::vector<std::uint8_t> rx_data   = { 0 };
 
-#define no_DEBUG
+#ifdef _DEBUG
+#undef _DEBUG
+#endif
 
 #ifdef _DEBUG
 static void TestDummy()
@@ -35,22 +37,27 @@ static void TestDummy()
 int main()
 {
 	VideoDeviceFactory        factory;
-	std::vector<std::uint8_t> y;
-	std::vector<std::uint8_t> uv;
 
 #ifdef _DEBUG
 	TestDummy();
 #endif
-	auto * device = factory.get()[0];
 
-	device->init();
-	const std::uint8_t status = device->get_status_byte();
-
-	printf("Status: 0x%02x\n", status);
-	if (device->sync())
+	if (!factory.get().empty())
 	{
-		device->fill();
-		device->read_yuv(y, uv);
+		auto * device = *factory.get().begin();
+
+		device->init();
+		const std::uint8_t status = device->get_status_byte();
+
+		printf("Status: 0x%02x\n", status);
+		if (device->sync())
+		{
+			std::vector<std::uint8_t> y;
+			std::vector<std::uint8_t> uv;
+
+			device->fill();
+			device->read_yuv(y, uv);
+		}
 	}
 
 	return EXIT_SUCCESS;

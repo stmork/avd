@@ -24,6 +24,8 @@ class AmigaVideoDevice : protected I2CDevice
 
 	std::uint8_t             state = 0;
 
+	static const std::uint8_t SAA_SLAVE_ADDRESS = 0x8a;
+
 public:
 	static const     unsigned     xSize  = 720;
 	static const     unsigned     ySize  = 576;
@@ -36,7 +38,7 @@ public:
 	{
 	}
 
-	void init();
+	void init(const bool pal = true, const bool short_delay = true);
 	std::uint8_t get_status_byte();
 	bool sync();
 	bool wait(const std::uint32_t mask, const bool set);

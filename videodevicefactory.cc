@@ -23,31 +23,33 @@ namespace
 
 VideoDeviceFactory::VideoDeviceFactory()
 {
-	memset(io_addresses, 0xff, sizeof(io_addresses));
+	memset(io_addresses, 0x7f, sizeof(io_addresses));
 
 #ifdef __amiga__
 	ExpansionBase = reinterpret_cast<struct ExpansionBase *>(OpenLibrary("expansion.library", 0));
 
-	if (ExpansionBase == nullptr)
+	if (ExpansionBase != nullptr)
+	{
+		ConfigDev * config_dev = nullptr;
+
+		while ((config_dev = FindConfigDev(config_dev, -1, -1)) != nullptr)
+		{
+			const UWORD vendor_id     = config_dev->cd_Rom.er_Manufacturer;
+			const UBYTE product_id    = config_dev->cd_Rom.er_Product;
+			APTR        board_address = config_dev->cd_BoardAddr;
+
+			find_device(AutoConfigKey(vendor_id, product_id), static_cast<volatile std::uint8_t *>(board_address));
+		}
+
+		CloseLibrary(ExpansionBase);
+	}
+#endif
+
+#ifdef _DEBUG
+	if (devices.empty())
 	{
 		find_device(AutoConfigKey(2157, 7), io_addresses);
-		return;
 	}
-
-	ConfigDev * cd = nullptr;
-
-	while ((cd = FindConfigDev(cd, -1, -1)) != nullptr)
-	{
-		const UWORD vendor_id     = cd->cd_Rom.er_Manufacturer;
-		const UBYTE product_id    = cd->cd_Rom.er_Product;
-		APTR        board_address = cd->cd_BoardAddr;
-
-		find_device(AutoConfigKey(vendor_id, product_id), static_cast<volatile std::uint8_t *>(board_address));
-	}
-
-	CloseLibrary(ExpansionBase);
-#else
-	find_device(AutoConfigKey(2157, 7), io_addresses);
 #endif
 }
 
