@@ -34,6 +34,19 @@ static void TestDummy()
 }
 #endif
 
+static void write(
+	const std::vector<std::uint8_t> & vector,
+				  const char *filename)
+{
+	FILE * file = fopen(filename, "wb");
+
+	if (file != nullptr)
+	{
+		fwrite(vector.data(), 1, vector.size(), file);
+		fclose(file);
+	}
+}
+
 int main()
 {
 	VideoDeviceFactory        factory;
@@ -57,6 +70,9 @@ int main()
 
 			device->fill();
 			device->read_yuv(y, uv);
+
+			write(y, "frame_y.dat");
+			write(uv, "frame_uv.dat");
 		}
 	}
 
