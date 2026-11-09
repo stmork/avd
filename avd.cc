@@ -36,7 +36,7 @@ static void TestDummy()
 
 static void write(
 	const std::vector<std::uint8_t> & vector,
-				  const char *filename)
+	const char * filename)
 {
 	FILE * file = fopen(filename, "wb");
 
@@ -60,19 +60,39 @@ int main()
 		auto * device = *factory.get().begin();
 
 		device->init();
-		const std::uint8_t status = device->get_status_byte();
+		const Saa9051Status status = device->get_status_byte();
 
-		printf("Status: 0x%02x\n", status);
-		if (device->sync())
+		printf("Status: 0x%02x\n", status.value);
+
+		if (status.PONRES)
 		{
-			std::vector<std::uint8_t> y;
-			std::vector<std::uint8_t> uv;
+			printf("Ongoing Reset\n");
+		}
+		if (status.HLOCK)
+		{
+			printf("Warning: No horizontal sync detected!\n");
+		}
+		else
+		{
+			printf("Field frequency: %d Hz, %s\n",
+				status.FD ? 60 : 50,
+				status.CD ? "color" : "b/w");
+			if (status.CS)
+			{
+				printf("SECAM detected\n");
+			}
 
-			device->fill();
-			device->read_yuv(y, uv);
+			if (device->sync())
+			{
+				std::vector<std::uint8_t> y;
+				std::vector<std::uint8_t> uv;
 
-			write(y, "frame_y.dat");
-			write(uv, "frame_uv.dat");
+				device->fill();
+				device->read_yuv(y, uv);
+
+				write(y, "frame_y.dat");
+				write(uv, "frame_uv.dat");
+			}
 		}
 	}
 

@@ -11,6 +11,22 @@
 #include "i2cdevice.h"
 #include "avddeviceinfo.h"
 
+union Saa9051Status
+{
+	struct
+	{
+		std::uint8_t PONRES : 1;
+		std::uint8_t HLOCK  : 1;
+		std::uint8_t ONE5   : 1;
+		std::uint8_t FD     : 1;
+		std::uint8_t ZERO3  : 1;
+		std::uint8_t CD     : 1;
+		std::uint8_t CS     : 1;
+		std::uint8_t ZERO0  : 1;
+	};
+	std::uint8_t value;
+};
+
 class AmigaVideoDevice : protected I2CDevice
 {
 	static constexpr std::uint8_t SDA    = 1 << 0;
@@ -39,7 +55,7 @@ public:
 	}
 
 	void init(const bool pal = true, const bool short_delay = true);
-	std::uint8_t get_status_byte();
+	Saa9051Status get_status_byte();
 	bool sync();
 	bool wait(const std::uint32_t mask, const bool set);
 

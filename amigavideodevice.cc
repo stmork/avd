@@ -55,14 +55,16 @@ void AmigaVideoDevice::init(const bool pal, const bool short_delay)
 	send(saa_slave_receiver);
 }
 
-std::uint8_t AmigaVideoDevice::get_status_byte()
+Saa9051Status AmigaVideoDevice::get_status_byte()
 {
 	static const std::vector<std::uint8_t> saa_slave_transmitter { SAA_SLAVE_ADDRESS | 1 };
 	std::vector<std::uint8_t> rx_data   = { 0 };
 
 	receive(saa_slave_transmitter, rx_data);
+	Saa9051Status status;
 
-	return rx_data[0];
+	status.value = rx_data[0];
+	return status;
 }
 
 bool AmigaVideoDevice::sync()
