@@ -112,11 +112,11 @@ void AmigaVideoDevice::scan_sync(
 bool AmigaVideoDevice::sync()
 {
 #if 1
-	wait(VSYNC,  DBNE);
+	wait(VSYNC,  DBNE, 50 * 625);
 	set_write_yuv();
 	wait(HBLANK, DBNE);
 	clr_write_yuv();
-	wait(VSYNC,  DBEQ);
+	wait(VSYNC,  DBEQ, 50 * 625);
 	enable_write(true);
 
 	wait(VSYNC,  DBNE);
@@ -150,12 +150,12 @@ bool AmigaVideoDevice::sync()
 	return true;
 }
 
-bool AmigaVideoDevice::wait(const std::uint32_t mask, const bool set)
+bool AmigaVideoDevice::wait(const std::uint32_t mask, const bool set, const unsigned timeout)
 {
 	volatile const std::uint8_t * ptr = address<std::uint8_t>(AvdDeviceInfo::IoIndex::VIDEO_SYNC);
 	const std::uint8_t            cmp = set ? mask : 0;
 
-	for (unsigned i = 0; i < 65000; i++)
+	for (unsigned i = 0; i < timeout; i++)
 	{
 		if ((*ptr & mask) == cmp)
 		{

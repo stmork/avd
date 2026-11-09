@@ -170,7 +170,7 @@ public:
 		const unsigned              max = 3000);
 
 	bool sync();
-	bool wait(const std::uint32_t mask, const bool set);
+	bool wait(const std::uint32_t mask, const bool set, const unsigned int timeout = 128);
 
 	void fill();
 	void read_yuv(
