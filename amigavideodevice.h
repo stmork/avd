@@ -27,6 +27,73 @@ union Saa9051Status
 	std::uint8_t value;
 };
 
+union Saa9051Config
+{
+	struct
+	{
+		union
+		{
+			struct
+			{
+				std::uint8_t BY  : 1;
+				std::uint8_t PF  : 1;
+				std::uint8_t BP  : 2;
+				std::uint8_t COR : 2;
+				std::uint8_t AP  : 2;
+			};
+			std::uint8_t value;
+		} horizontal_peaking;
+
+		std::uint8_t hue;
+
+		union
+		{
+			struct
+			{
+				std::uint8_t HPLL : 1;
+				std::uint8_t FS   : 1;
+				std::uint8_t VTR  : 1;
+				std::uint8_t CO   : 1;
+				std::uint8_t ALT  : 1;
+				std::uint8_t YPN  : 1;
+				std::uint8_t CCFR : 2;
+			};
+			std::uint8_t value;
+		} control1;
+
+		union
+		{
+			struct
+			{
+				std::uint8_t VNL  : 1;
+				std::uint8_t OEY  : 1;
+				std::uint8_t OEC  : 1;
+				std::uint8_t X    : 1;
+				std::uint8_t CI   : 1;
+				std::uint8_t AFCC : 1;
+				std::uint8_t SS   : 2;
+			};
+			std::uint8_t value;
+		} control2;
+
+		union
+		{
+			struct
+			{
+				std::uint8_t SYC  : 1;
+				std::uint8_t CT   : 1;
+				std::uint8_t YC   : 1;
+				std::uint8_t SS   : 2;
+				std::uint8_t YDL  : 3;
+			};
+			std::uint8_t value;
+		} control3;
+
+		std::uint8_t secam_delay_compensation;
+	};
+	std::uint8_t values[6];
+};
+
 class AmigaVideoDevice : protected I2CDevice
 {
 	static constexpr std::uint8_t SDA    = 1 << 0;
@@ -39,6 +106,7 @@ class AmigaVideoDevice : protected I2CDevice
 	const    std::uint16_t * io_offsets = nullptr;
 
 	std::uint8_t             state = 0;
+	std::uint8_t             input = 0;
 
 	static const std::uint8_t SAA_SLAVE_ADDRESS = 0x8a;
 
@@ -55,9 +123,14 @@ public:
 	}
 
 	void init(const bool short_delay = true);
-	void init_norm(const bool ntsc = false);
+	void init_norm(
+		const bool color,
+		const bool ntsc = false);
 
 	Saa9051Status get_status_byte();
+	void scan_sync(
+		std::vector<std::uint8_t> & data,
+		const unsigned              max = 60000);
 	bool sync();
 	bool wait(const std::uint32_t mask, const bool set);
 

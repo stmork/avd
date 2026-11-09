@@ -23,16 +23,6 @@ const std::vector<std::uint8_t> AmigaVideoDevice::SAA_long_delay
 	0x7e, 0x73, 0x43, 0x32, 0x03, 0xff
 };
 
-const std::vector<std::uint8_t> AmigaVideoDevice::SAA_PAL
-{
-	0x02, 0x00, 0x38, 0xe3, 0x58, 0x00
-};
-
-const std::vector<std::uint8_t> AmigaVideoDevice::SAA_NTSC
-{
-	0x62, 0x00, 0x77, 0xe3, 0x58, 0x00
-};
-
 /*************************************************************************
 **                                                                      **
 **                        SAA 9051 control and access                   **
@@ -53,16 +43,36 @@ void AmigaVideoDevice::init(const bool short_delay)
 	send(saa_slave_receiver);
 }
 
-void AmigaVideoDevice::init_norm(const bool ntsc)
+void AmigaVideoDevice::init_norm(
+	const bool color,
+	const bool ntsc)
 {
 	std::vector<std::uint8_t> saa_slave_receiver
 	{
 		SAA_SLAVE_ADDRESS, 6
 	};
 
-	const std::vector<std::uint8_t> & saa_video = ntsc ? SAA_NTSC : SAA_PAL;
+	Saa9051Config config{};
 
-	saa_slave_receiver.insert(saa_slave_receiver.end(), saa_video.begin(), saa_video.end());
+	config.horizontal_peaking.PF = 0;
+	config.horizontal_peaking.BY = 0;
+
+	config.control1.FS   = ntsc;
+	config.control1.VTR  = 1;
+	config.control1.CO   = color;
+	config.control1.ALT  = !ntsc;
+	config.control1.YPN  = 0;
+	config.control1.CCFR = 0;
+
+	config.control2.OEY = 1;
+	config.control2.OEC = color;
+	config.control2.CI  = 0;
+	config.control2.SS  = input;
+
+	config.control3.value = 0;
+
+	saa_slave_receiver.insert(saa_slave_receiver.end(),
+		config.values, config.values + sizeof(config.values));
 
 	send(saa_slave_receiver);
 }
@@ -79,18 +89,54 @@ Saa9051Status AmigaVideoDevice::get_status_byte()
 	return status;
 }
 
+void AmigaVideoDevice::scan_sync(
+	std::vector<std::uint8_t> & sync_vector,
+	const unsigned              max)
+{
+	for (unsigned i = 0; i < max; i++)
+	{
+		sync_vector.push_back(get_sync() & (VSYNC | HBLANK));
+	}
+}
+
+#define DBEQ  false
+#define DBNE  true
+
 bool AmigaVideoDevice::sync()
 {
-	wait(VSYNC,  false);
-	wait(HBLANK, false);
+#if 1
+	wait(VSYNC,  DBNE);
+	set_write_yuv();
+	wait(HBLANK, DBNE);
+	clr_write_yuv();
+	wait(VSYNC,  DBEQ);
+	enable_write(true);
+
+	wait(VSYNC,  DBNE);
+	wait(VSYNC,  DBEQ);
+	wait(VSYNC,  DBNE);
+
+	enable_write(false);
+#else
+	// Wait end of VSync/HBlank
+	wait(VSYNC,  DBNE);
+	wait(HBLANK, DBNE);
 
 	set_write_yuv();
 	clr_write_yuv();
 
-	wait(VSYNC,  true);
-	wait(HBLANK, true);
+	// Wait start of VSync/HBlank
+	wait(VSYNC,  DBEQ);
+	wait(HBLANK, DBEQ);
 
 	enable_write(true);
+
+	wait(VSYNC,  DBNE);
+	wait(VSYNC,  DBEQ);
+	wait(VSYNC,  DBNE);
+
+	enable_write(false);
+#endif
 
 	return true;
 }
@@ -111,9 +157,9 @@ bool AmigaVideoDevice::wait(const std::uint32_t mask, const bool set)
 
 void AmigaVideoDevice::fill()
 {
-	enable_write(true);
-	usleep(1000000 / 50 + 5);
-	enable_write(false);
+	// enable_write(true);
+	// usleep(1000000 / 50 + 5);
+	// enable_write(false);
 }
 
 void AmigaVideoDevice::read_yuv(
@@ -183,17 +229,17 @@ std::uint8_t AmigaVideoDevice::get_data() const
 
 void AmigaVideoDevice::set_write_yuv()
 {
-	read<std::uint16_t>(AvdDeviceInfo::IoIndex::VRAM_SETRSTW);
+	read<std::uint16_t>(AvdDeviceInfo::IoIndex::VRAM_SET_RSTW);
 }
 
 void AmigaVideoDevice::clr_write_yuv()
 {
-	read<std::uint16_t>(AvdDeviceInfo::IoIndex::VRAM_CLRRSTW);
+	read<std::uint16_t>(AvdDeviceInfo::IoIndex::VRAM_CLR_RSTW);
 }
 
 void AmigaVideoDevice::reset_read_yuv()
 {
-	read<std::uint16_t>(AvdDeviceInfo::IoIndex::VRAM_RESETREADYUV);
+	read<std::uint16_t>(AvdDeviceInfo::IoIndex::VRAM_RESET_READYUV);
 }
 
 void AmigaVideoDevice::enable_write(const bool enable)

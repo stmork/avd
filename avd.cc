@@ -11,15 +11,15 @@
 #include "dummyi2cdevice.h"
 #include "videodevicefactory.h"
 
-std::vector<std::uint8_t> tx_data   = { 0x8a, 0x00, 0x01, 0x02 };
-std::vector<std::uint8_t> rx_header = { 0x8b };
-std::vector<std::uint8_t> rx_data   = { 0 };
-
 #ifdef _DEBUG
 #undef _DEBUG
 #endif
 
 #ifdef _DEBUG
+static std::vector<std::uint8_t> tx_data   = { 0x8a, 0x00, 0x01, 0x02 };
+static std::vector<std::uint8_t> rx_header = { 0x8b };
+static std::vector<std::uint8_t> rx_data   = { 0 };
+
 static void TestDummy()
 {
 	DummyI2cDevice     device;
@@ -38,7 +38,7 @@ static void TestDummy()
 
 static void write(
 	const std::vector<std::uint8_t> & vector,
-	const char * filename)
+	const char            *           filename)
 {
 	FILE * file = fopen(filename, "wb");
 
@@ -60,6 +60,7 @@ int main()
 	if (!factory.get().empty())
 	{
 		auto * device = *factory.get().begin();
+		std::vector<std::uint8_t> sync_data;
 
 		device->init();
 
@@ -67,6 +68,9 @@ int main()
 		const Saa9051Status status = device->get_status_byte();
 
 		printf("Status: 0x%02x\n", status.value);
+
+		device->scan_sync(sync_data, 128000);
+		write(sync_data, "frame_sync.dat");
 
 		if (status.PONRES)
 		{
@@ -85,8 +89,9 @@ int main()
 			{
 				printf("SECAM detected\n");
 			}
-			device->init_norm(status.FD);
+			device->init_norm(status.CD, status.FD);
 
+			printf("Waiting for sync...\n");
 			if (device->sync())
 			{
 				std::vector<std::uint8_t> y;

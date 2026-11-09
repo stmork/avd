@@ -9,7 +9,7 @@ namespace
 {
 	const AvdDeviceInfo AVD_MVD819_INFO
 	{
-		"MVD819",
+		"MVD 819",
 		{
 			0x4f01,
 			0x4d01,
