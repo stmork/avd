@@ -131,25 +131,28 @@ struct Saa9051Param
 
 class AmigaVideoDevice : protected I2CDevice
 {
-	static constexpr std::uint8_t SDA    = 1 << 0;
-	static constexpr std::uint8_t SCL    = 1 << 1;
+	static constexpr std::uint8_t SDA               = 1 << 0;
+	static constexpr std::uint8_t SCL               = 1 << 1;
 
-	static constexpr std::uint8_t VSYNC  = 1 << 0;
-	static constexpr std::uint8_t HBLANK = 1 << 1;
+	static constexpr std::uint8_t VSYNC             = 1 << 0;
+	static constexpr std::uint8_t HBLANK            = 1 << 1;
+
+	static constexpr unsigned     HBLANK_TIMEOUT    = 128;
+	static constexpr unsigned     VSYNC_TIMEOUT     = HBLANK_TIMEOUT * 625 / 2;
 
 	static constexpr std::uint8_t SAA_SLAVE_ADDRESS = 0x8a;
 
-	volatile std::uint8_t    *    io_address = nullptr;
-	const    std::uint16_t    *   io_offsets = nullptr;
+	volatile std::uint8_t    *    io_address        = nullptr;
+	const    std::uint16_t    *   io_offsets        = nullptr;
 
-	std::uint8_t                  state = 0;
-	std::uint8_t                  input = 0;
+	std::uint8_t                  state             =   0;
+	std::uint8_t                  input             =   0;
 
 public:
-	static constexpr unsigned     xSize     = 720;
-	static constexpr unsigned     ySize     = 625;
+	static constexpr unsigned     xSize             = 720;
+	static constexpr unsigned     ySize             = 625;
 
-	static constexpr unsigned     MAX_INPUT = 2;
+	static constexpr unsigned     MAX_VIDEO_INPUTS  =   2;
 
 	AmigaVideoDevice() = delete;
 	AmigaVideoDevice(
@@ -167,12 +170,12 @@ public:
 	Saa9051Status get_status_byte();
 	void scan_sync(
 		std::vector<std::uint8_t> & data,
-		const unsigned              max = 3000);
+		const unsigned              max = 10000);
 
 	bool sync();
-	bool wait(const std::uint32_t mask, const bool set, const unsigned int timeout = 128);
 
 	void fill();
+	void read_y(std::vector<std::uint8_t> & yData);
 	void read_yuv(
 		std::vector<std::uint8_t> & yData,
 		std::vector<std::uint8_t> & uvData);
@@ -217,13 +220,20 @@ private:
 	static const std::vector<std::uint8_t> SAA_PAL;
 	static const std::vector<std::uint8_t> SAA_NTSC;
 
+	bool wait_hblank(const bool set);
+	bool wait_vsync(const bool set);
+	bool wait(
+		const std::uint32_t mask,
+		const bool          set,
+		const unsigned      timeout = VSYNC_TIMEOUT);
+
 	void set_write_yuv();
 	void clr_write_yuv();
 	void reset_read_yuv();
 	void enable_write(const bool enable);
 	std::uint8_t get_sync() const;
 
-	Saa9051Param              params[MAX_INPUT];
+	Saa9051Param              params[MAX_VIDEO_INPUTS];
 };
 
 #endif // AVD_AMIGAVIDEODEVICE_H

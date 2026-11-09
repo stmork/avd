@@ -106,51 +106,10 @@ void AmigaVideoDevice::scan_sync(
 	}
 }
 
-#define DBEQ  false
-#define DBNE  true
-
-bool AmigaVideoDevice::sync()
-{
-#if 1
-	wait(VSYNC,  DBNE, 50 * 625);
-	set_write_yuv();
-	wait(HBLANK, DBNE);
-	clr_write_yuv();
-	wait(VSYNC,  DBEQ, 50 * 625);
-	enable_write(true);
-
-	wait(VSYNC,  DBNE);
-	wait(VSYNC,  DBEQ);
-	wait(VSYNC,  DBNE);
-	wait(VSYNC,  DBEQ);
-	// wait(VSYNC,  DBNE);
-
-	enable_write(false);
-#else
-	// Wait end of VSync/HBlank
-	wait(VSYNC,  DBNE);
-	wait(HBLANK, DBNE);
-
-	set_write_yuv();
-	clr_write_yuv();
-
-	// Wait start of VSync/HBlank
-	wait(VSYNC,  DBEQ);
-	wait(HBLANK, DBEQ);
-
-	enable_write(true);
-
-	wait(VSYNC,  DBNE);
-	wait(VSYNC,  DBEQ);
-	wait(VSYNC,  DBNE);
-
-	enable_write(false);
-#endif
-
-	return true;
-}
-
-bool AmigaVideoDevice::wait(const std::uint32_t mask, const bool set, const unsigned timeout)
+bool AmigaVideoDevice::wait(
+	const std::uint32_t mask,
+	const bool          set,
+	const unsigned      timeout)
 {
 	volatile const std::uint8_t * ptr = address<std::uint8_t>(AvdDeviceInfo::IoIndex::VIDEO_SYNC);
 	const std::uint8_t            cmp = set ? mask : 0;
@@ -165,10 +124,63 @@ bool AmigaVideoDevice::wait(const std::uint32_t mask, const bool set, const unsi
 	return false;
 }
 
+inline bool AmigaVideoDevice::wait_hblank(const bool set)
+{
+	return wait(HBLANK, set, HBLANK_TIMEOUT);
+}
+
+inline bool AmigaVideoDevice::wait_vsync(const bool set)
+{
+	return wait(VSYNC, set, VSYNC_TIMEOUT);
+}
+
+#define DBEQ  false
+#define DBNE  true
+
+bool AmigaVideoDevice::sync()
+{
+	if (!wait_vsync(DBNE))
+	{
+		return false;
+	}
+
+	set_write_yuv();
+	wait_hblank(DBNE);
+	clr_write_yuv();
+
+	return wait_vsync(DBEQ);
+}
+
 void AmigaVideoDevice::fill()
 {
-	// usleep(1200000 / 50);
-	// enable_write(false);
+	enable_write(true);
+	wait(VSYNC,  DBNE);
+	wait(VSYNC,  DBEQ);
+	wait(VSYNC,  DBNE);
+//	wait(VSYNC,  DBEQ);
+	enable_write(false);
+}
+
+void AmigaVideoDevice::read_y(std::vector<std::uint8_t> & yData)
+{
+	reset_read_yuv();
+	yData.clear();
+	yData.reserve(xSize * ySize);
+
+	volatile const std::uint32_t * yPtr = address<std::uint32_t>(AvdDeviceInfo::IoIndex::VRAM_READINCY);
+
+	for (unsigned y = 0; y < ySize; y++)
+	{
+		for (unsigned x = 0; x < xSize; x += 4)
+		{
+			const std::uint32_t yyyy = *yPtr;
+
+			yData.push_back((yyyy >> 24) & 0xff);
+			yData.push_back((yyyy >> 16) & 0xff);
+			yData.push_back((yyyy >>  8) & 0xff);
+			yData.push_back(yyyy         & 0xff);
+		}
+	}
 }
 
 void AmigaVideoDevice::read_yuv(
@@ -188,7 +200,7 @@ void AmigaVideoDevice::read_yuv(
 	{
 		for (unsigned x = 0; x < xSize; x += 4)
 		{
-			const std::uint32_t yyyy = *yPtr << 1;
+			const std::uint32_t yyyy = *yPtr;
 			const std::uint8_t  uv_h = *uvPtr;
 			const std::uint8_t  uv_l = *uvPtr;
 
@@ -203,9 +215,9 @@ void AmigaVideoDevice::read_yuv(
 	}
 }
 
-bool AmigaVideoDevice::select_input(const unsigned int new_input)
+bool AmigaVideoDevice::select_input(const unsigned new_input)
 {
-	if (new_input >= MAX_INPUT)
+	if (new_input >= MAX_VIDEO_INPUTS)
 	{
 		return false;
 	}
@@ -219,7 +231,7 @@ bool AmigaVideoDevice::select_input(const unsigned int new_input)
 	config.control2.CI  = 0;
 	config.control2.SS  = input;
 
-	const std::vector<__uint8_t> saa_slave_receiver
+	const std::vector<std::uint8_t> saa_slave_receiver
 	{
 		SAA_SLAVE_ADDRESS, 0x09, config.control2.value
 	};

@@ -95,18 +95,22 @@ int main()
 			printf("Waiting for sync...\n");
 			if (device->sync())
 			{
-				std::vector<std::uint8_t> y;
-				std::vector<std::uint8_t> uv;
-
 				printf("Filling VRAM...\n");
 				device->fill();
+
+				std::vector<std::uint8_t> y;
+				std::vector<std::uint8_t> uv;
 
 				printf("Reading VRAM...\n");
 				device->read_yuv(y, uv);
 
 				printf("Writing data to files...\n");
-				write(y, "frame_y.dat");
+				write(y,  "frame_y.dat");
 				write(uv, "frame_uv.dat");
+			}
+			else
+			{
+				printf("No sync found!\n");
 			}
 		}
 	}
