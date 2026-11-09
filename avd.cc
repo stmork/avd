@@ -63,13 +63,14 @@ int main()
 		std::vector<std::uint8_t> sync_data;
 
 		device->init();
+		device->select_input(0);
 
 		usleep(100000);
 		const Saa9051Status status = device->get_status_byte();
 
 		printf("Status: 0x%02x\n", status.value);
 
-		device->scan_sync(sync_data, 128000);
+		device->scan_sync(sync_data, 50 * 60 * 2);
 		write(sync_data, "frame_sync.dat");
 
 		if (status.PONRES)
@@ -97,9 +98,13 @@ int main()
 				std::vector<std::uint8_t> y;
 				std::vector<std::uint8_t> uv;
 
+				printf("Filling VRAM...\n");
 				device->fill();
+
+				printf("Reading VRAM...\n");
 				device->read_yuv(y, uv);
 
+				printf("Writing data to files...\n");
 				write(y, "frame_y.dat");
 				write(uv, "frame_uv.dat");
 			}
