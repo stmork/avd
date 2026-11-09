@@ -39,7 +39,7 @@ const std::vector<std::uint8_t> AmigaVideoDevice::SAA_NTSC
 **                                                                      **
 *************************************************************************/
 
-void AmigaVideoDevice::init(const bool pal, const bool short_delay)
+void AmigaVideoDevice::init(const bool short_delay)
 {
 	std::vector<std::uint8_t> saa_slave_receiver
 	{
@@ -47,9 +47,21 @@ void AmigaVideoDevice::init(const bool pal, const bool short_delay)
 	};
 
 	const std::vector<std::uint8_t> & saa_delay = short_delay ? SAA_short_delay : SAA_long_delay;
-	const std::vector<std::uint8_t> & saa_video = pal ? SAA_PAL : SAA_NTSC;
 
 	saa_slave_receiver.insert(saa_slave_receiver.end(), saa_delay.begin(), saa_delay.end());
+
+	send(saa_slave_receiver);
+}
+
+void AmigaVideoDevice::init_norm(const bool ntsc)
+{
+	std::vector<std::uint8_t> saa_slave_receiver
+	{
+		SAA_SLAVE_ADDRESS, 6
+	};
+
+	const std::vector<std::uint8_t> & saa_video = ntsc ? SAA_NTSC : SAA_PAL;
+
 	saa_slave_receiver.insert(saa_slave_receiver.end(), saa_video.begin(), saa_video.end());
 
 	send(saa_slave_receiver);

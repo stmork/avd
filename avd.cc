@@ -6,6 +6,8 @@
 #include <cstdlib>
 #include <cstdio>
 
+#include <unistd.h>
+
 #include "dummyi2cdevice.h"
 #include "videodevicefactory.h"
 
@@ -60,6 +62,8 @@ int main()
 		auto * device = *factory.get().begin();
 
 		device->init();
+
+		usleep(100000);
 		const Saa9051Status status = device->get_status_byte();
 
 		printf("Status: 0x%02x\n", status.value);
@@ -81,6 +85,7 @@ int main()
 			{
 				printf("SECAM detected\n");
 			}
+			device->init_norm(status.FD);
 
 			if (device->sync())
 			{

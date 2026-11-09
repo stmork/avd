@@ -54,7 +54,9 @@ public:
 	{
 	}
 
-	void init(const bool pal = true, const bool short_delay = true);
+	void init(const bool short_delay = true);
+	void init_norm(const bool ntsc = false);
+
 	Saa9051Status get_status_byte();
 	bool sync();
 	bool wait(const std::uint32_t mask, const bool set);
