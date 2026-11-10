@@ -173,7 +173,7 @@ void AmigaVideoDevice::read_y(std::vector<std::uint8_t> & yData)
 	{
 		for (unsigned x = 0; x < xSize; x += 4)
 		{
-			const std::uint32_t yyyy = *yPtr;
+			const std::uint32_t yyyy = *yPtr << y_shift;
 
 			yData.push_back((yyyy >> 24) & 0xff);
 			yData.push_back((yyyy >> 16) & 0xff);
@@ -193,14 +193,14 @@ void AmigaVideoDevice::read_yuv(
 	uvData.clear();
 	uvData.reserve(xSize * ySize / 2);
 
-	volatile const std::uint32_t * yPtr = address<std::uint32_t>(AvdDeviceInfo::IoIndex::VRAM_READINCY);
-	volatile const std::uint8_t  * uvPtr = address<std::uint8_t>(AvdDeviceInfo::IoIndex::VRAM_READINCUV);
+	volatile const std::uint32_t * yPtr  = address<std::uint32_t>(AvdDeviceInfo::IoIndex::VRAM_READINCY);
+	volatile const std::uint8_t  * uvPtr = address<std::uint8_t>( AvdDeviceInfo::IoIndex::VRAM_READINCUV);
 
 	for (unsigned y = 0; y < ySize; y++)
 	{
 		for (unsigned x = 0; x < xSize; x += 4)
 		{
-			const std::uint32_t yyyy = *yPtr;
+			const std::uint32_t yyyy = *yPtr << y_shift;
 			const std::uint8_t  uv_h = *uvPtr;
 			const std::uint8_t  uv_l = *uvPtr;
 

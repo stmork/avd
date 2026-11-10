@@ -144,6 +144,7 @@ class AmigaVideoDevice : protected I2CDevice
 
 	volatile std::uint8_t    *    io_address        = nullptr;
 	const    std::uint16_t    *   io_offsets        = nullptr;
+	const    unsigned             y_shift           =   0;
 
 	std::uint8_t                  state             =   0;
 	std::uint8_t                  input             =   0;
@@ -157,8 +158,11 @@ public:
 	AmigaVideoDevice() = delete;
 	AmigaVideoDevice(
 		volatile std::uint8_t * io_address_param,
-		const std::uint16_t  *  io_offsets_param) :
-		io_address(io_address_param), io_offsets(io_offsets_param)
+		const std::uint16_t  *  io_offsets_param,
+		const unsigned          y_shift_param = 0) :
+		io_address(io_address_param),
+		io_offsets(io_offsets_param),
+		y_shift(y_shift_param)
 	{
 	}
 

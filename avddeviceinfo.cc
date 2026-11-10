@@ -24,7 +24,8 @@ namespace
 
 			0x4501
 		},
-		2157, 7
+		2157, 7,
+		1
 	};
 
 	const AvdDeviceInfo AVD_VLAB_INFO
@@ -44,7 +45,8 @@ namespace
 
 			0x2301
 		},
-		18260, 4
+		18260, 4,
+		0
 	};
 }
 

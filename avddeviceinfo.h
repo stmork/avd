@@ -38,6 +38,7 @@ struct AvdDeviceInfo
 	const std::uint16_t io_offsets[(unsigned)IoIndex::IO_MAX_INDEX];
 	const std::uint16_t vendor_id;
 	const std::uint8_t  product_id;
+	const unsigned      y_shift = 0;
 };
 
 // This is a shortcut to of the key map.

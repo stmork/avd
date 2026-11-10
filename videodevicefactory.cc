@@ -78,7 +78,8 @@ void VideoDeviceFactory::find_device(
 		const AvdDeviceInfo * info = it->second;
 
 		printf("Found: %s at %8p\n", info->name, io);
-		AmigaVideoDevice * device = new AmigaVideoDevice(io, info->io_offsets);
+		AmigaVideoDevice * device = new AmigaVideoDevice(
+			io, info->io_offsets, info->y_shift);
 
 		devices.push_back(device);
 	}
