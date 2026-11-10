@@ -18,9 +18,11 @@ two sources, storing the data into memory. From a software perspective, the
 SAA 9051 must be configured via I²C, and its video status can be read out.
 The VRAM is accessed via specific I/O ports. The SAA 9051 is addressed using
 the slave address 0x8a; the least significant bit determines whether the
-operation is a read (0) or a write (1). This is followed by a sub-address
+operation is a slave read (0) or a slave write (1). The slave read is followed by a sub-address
 used to access individual registers. It is possible to transmit a sequence
-of bytes, with register numbers incrementing automatically.
+of bytes, with register numbers incrementing automatically. When
+transmitting from the slave there is no address and the host receives only a status
+byte.
 
 I²C control is handled via I/O addresses relative to the base address
 assigned by the AutoConfig system:
@@ -43,13 +45,12 @@ the following pinout/mapping:
 | 0x4000|0x2200|Set RSTW, Reset Write Address on (Word Read) |
 | 0x4100|0x2080|Clear RSTW, Reset Write Address off (Word Read) |
 
-The process of reading from the memory requires further investigation. The
-current AmigaOS driver reads four Y values ​​as a single long
-word, and UV values ​​byte-by-byte—alternating between the high
-nibbles and the low nibbles. It is likely that the UV data can be read in a
-single operation using a long word, though the nibbles would still need to
-be rearranged accordingly. The memory mapping follows a 4:1:1 YUV format,
-meaning that every four Y values ​​share a single U and V value.
+The current AmigaOS driver reads four Y values as a single long word, and UV
+values byte-by-byte—alternating between the UV high nibbles and the UV low
+nibbles. It is likely that the UV data can be read in a single operation
+using a long word, though the nibbles would still need to be rearranged
+accordingly. The memory mapping follows a 4:1:1 YUV format, meaning that
+every four Y values share a single U and V value.
 
 Vertical and Horizontal Blank signals also hold special significance and can
 be accessed via an additional IO register:
@@ -65,8 +66,13 @@ For testing purposes, this GitHub repository has been set up that uses C++
 to interface with the hardware. It simply initializes the SAA 9051. In case
 there is a valid video signal available it catches a complete frame, or two
 fields. The data is stored simply in to raw data files:
-- frame_y.dat, which contains the complete raw Y channel data. Note that the value domain is from [0..127].
-- frame_uv.dat, which contains the complete raw UV channels data. The data contains alternating U and V signed bytes.
+- frame_y.dat, which contains the complete raw Y channel data. These values
+contain only seven bits with the LSB equals to zero. The MVD maps these bits
+directly to the corresponding byte bits whereas the VLab has the bits
+already in place.
+- frame_uv.dat, which contains the complete raw UV channels data. The data
+contains the rearranged nibbles already in place using alternating U and V
+signed bytes.
 
 If you plan to save the data as JPEG, use the
 [AVD-Viewer](https://github.com/stmork/avd-viewer) software, which can read
