@@ -11,9 +11,9 @@ project(AVD
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wextra -fno-rtti -fno-exceptions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wextra -Wshadow -Wsuggest-override -fno-rtti -fno-exceptions")
 
-add_compile_definitions(_DEBUG)
+add_compile_definitions(no_DEBUG)
 
 include_directories(${GLOBAL_INCLUDE})
 
@@ -50,4 +50,13 @@ set_property(
 	TARGET cppcheck
 	APPEND
 	PROPERTY ADDITIONAL_CLEAN_FILES ${CMAKE_SOURCE_DIR}/cppcheck.xml
+)
+
+set_property(
+	TARGET ${PROJECT_NAME}
+	APPEND
+	PROPERTY ADDITIONAL_CLEAN_FILES
+	${CMAKE_SOURCE_DIR}/frame_y.dat
+	${CMAKE_SOURCE_DIR}/frame_uv.dat
+	${CMAKE_SOURCE_DIR}/frame_sync.dat
 )

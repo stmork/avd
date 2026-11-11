@@ -92,11 +92,10 @@ cmake -B build -DCMAKE_TOOLCHAIN_FILE=toolchain-m68k-amigaos.cmake
 make -C build
 ```
 
-The executing software uses the expansion.library to find any support video
-digitizer board. Note that only the videodevicefactory.cc file contains
-Amiga specific code! The Linux variant emulates a MVD 819 without providing
-any useful data. For compiling simply use the following commands as usual
-for CMake:
+The executing software uses the expansion.library to find any supported
+video digitizer board. The Linux variant emulates a MVD 819 without
+providing any useful data. For compiling simply use the following commands
+as usual for CMake:
 ```
 cmake -B build
 make -C build

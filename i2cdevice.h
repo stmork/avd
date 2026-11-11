@@ -13,7 +13,7 @@
 
 class I2CDevice
 {
-	unsigned timeout = 1000;
+	unsigned i2c_timeout = 1000;
 
 	class I2CStartStop
 	{

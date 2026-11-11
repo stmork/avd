@@ -59,19 +59,21 @@ int main()
 
 	if (!factory.get().empty())
 	{
-		auto * device = *factory.get().begin();
-		std::vector<std::uint8_t> sync_data;
+		auto           *          device = *factory.get().begin();
+		Saa9051Status             status;
 
+		status = device->get_status_byte();
+		printf("Status: 0x%02x\n", status.value);
 		device->init();
 		device->select_input(0);
 
-		usleep(100000);
-		const Saa9051Status status = device->get_status_byte();
+		// Wait for power on and hlock
+		usleep(250000);
 
+		device->scan_sync(625 * AmigaVideoDevice::HLINE_TIMEOUT);
+
+		status = device->get_status_byte();
 		printf("Status: 0x%02x\n", status.value);
-
-		device->scan_sync(sync_data, 50 * 60 * 2);
-		write(sync_data, "frame_sync.dat");
 
 		if (status.PONRES)
 		{
@@ -95,24 +97,41 @@ int main()
 			printf("Waiting for sync...\n");
 			if (device->sync())
 			{
-				printf("Filling VRAM...\n");
 				device->fill();
+				printf("Filled VRAM.\n");
 
 				std::vector<std::uint8_t> y;
 				std::vector<std::uint8_t> uv;
 
 				printf("Reading VRAM...\n");
-				device->read_yuv(y, uv);
+				if (status.CD)
+				{
+					device->read_yuv(y, uv);
+				}
+				else
+				{
+					device->read_y(y);
+				}
 
 				printf("Writing data to files...\n");
 				write(y,  "frame_y.dat");
-				write(uv, "frame_uv.dat");
+				if (status.CD)
+				{
+					write(uv, "frame_uv.dat");
+				}
 			}
 			else
 			{
 				printf("No sync found!\n");
 			}
+			write(device->sync_data, "frame_sync.dat");
+			write(device->int_data,  "frame_int.dat");
 		}
+
+		printf("Int count: %u %u %u\n",
+			device->counter,
+			device->vsync_counter,
+			device->hblank_counter);
 	}
 
 	return EXIT_SUCCESS;

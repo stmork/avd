@@ -67,7 +67,7 @@ std::uint8_t I2CDevice::send(const std::uint8_t byte)
 	{
 		ack = get_ack();
 	}
-	while (!ack && (to++ < timeout));
+	while (!ack && (to++ < i2c_timeout));
 	clock(0);
 	print(">----");
 

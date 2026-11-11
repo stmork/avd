@@ -8,6 +8,11 @@
 #ifndef AVD_AMIGAVIDEODEVICE_H
 #define AVD_AMIGAVIDEODEVICE_H
 
+#ifdef __amiga__
+#include <exec/types.h>
+#include <exec/interrupts.h>
+#endif
+
 #include "i2cdevice.h"
 #include "avddeviceinfo.h"
 
@@ -124,9 +129,8 @@ struct Saa9051Param
 	Coring      coring    = COR_OFF;
 	Weighting   weighting = WEIGHT_0;
 	std::int8_t hue       = 0;
-	bool        prefilter = false;
+	bool        prefilter = true;
 	bool        vtr       = true;
-	bool        vnl       = true;
 };
 
 class AmigaVideoDevice : protected I2CDevice
@@ -136,9 +140,6 @@ class AmigaVideoDevice : protected I2CDevice
 
 	static constexpr std::uint8_t VSYNC             = 1 << 0;
 	static constexpr std::uint8_t HBLANK            = 1 << 1;
-
-	static constexpr unsigned     HBLANK_TIMEOUT    = 128;
-	static constexpr unsigned     VSYNC_TIMEOUT     = HBLANK_TIMEOUT * 625 / 2;
 
 	static constexpr std::uint8_t SAA_SLAVE_ADDRESS = 0x8a;
 
@@ -153,18 +154,24 @@ public:
 	static constexpr unsigned     xSize             = 720;
 	static constexpr unsigned     ySize             = 625;
 
+	static constexpr unsigned     HLINE_TIMEOUT     = 128;
+	static constexpr unsigned     HBLANK_TIMEOUT    =   5;
+	static constexpr unsigned     VSYNC_TIMEOUT     = HLINE_TIMEOUT * 625 / 2;
+
 	static constexpr unsigned     MAX_VIDEO_INPUTS  =   2;
+	unsigned                      counter           =   0;
+	unsigned                      vsync_counter     =   0;
+	unsigned                      hblank_counter    =   0;
+	std::vector<std::uint8_t>     int_data;
+	std::vector<std::uint8_t>     sync_data;
 
 	AmigaVideoDevice() = delete;
 	AmigaVideoDevice(
 		volatile std::uint8_t * io_address_param,
 		const std::uint16_t  *  io_offsets_param,
-		const unsigned          y_shift_param = 0) :
-		io_address(io_address_param),
-		io_offsets(io_offsets_param),
-		y_shift(y_shift_param)
-	{
-	}
+		const unsigned          y_shift_param = 0);
+
+	~AmigaVideoDevice();
 
 	void init(const bool short_delay = true);
 	void init_norm(
@@ -172,9 +179,7 @@ public:
 		const bool ntsc = false);
 
 	Saa9051Status get_status_byte();
-	void scan_sync(
-		std::vector<std::uint8_t> & data,
-		const unsigned              max = 10000);
+	void scan_sync(const unsigned max = 10000);
 
 	bool sync();
 
@@ -224,20 +229,29 @@ private:
 	static const std::vector<std::uint8_t> SAA_PAL;
 	static const std::vector<std::uint8_t> SAA_NTSC;
 
-	bool wait_hblank(const bool set);
+	bool wait_hblank();
 	bool wait_vsync(const bool set);
-	bool wait(
+	unsigned int wait(
 		const std::uint32_t mask,
 		const bool          set,
 		const unsigned      timeout = VSYNC_TIMEOUT);
 
-	void set_write_yuv();
-	void clr_write_yuv();
-	void reset_read_yuv();
-	void enable_write(const bool enable);
+	void         set_write_yuv();
+	void         clr_write_yuv();
+	void         reset_read_yuv();
+	void         enable_write(const bool enable);
 	std::uint8_t get_sync() const;
 
 	Saa9051Param              params[MAX_VIDEO_INPUTS];
+
+#ifdef __amiga__
+	static ULONG interrupt_handler(AmigaVideoDevice * avd);
+
+	struct Interrupt interrupt;
+	struct Task   *  task = nullptr;
+	LONG             sig_bit;
+	ULONG            sig_mask;
+#endif
 };
 
 #endif // AVD_AMIGAVIDEODEVICE_H

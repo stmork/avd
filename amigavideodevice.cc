@@ -5,6 +5,13 @@
 
 #include <unistd.h>
 
+#ifdef __amiga__
+#include <hardware/intbits.h>
+#include <devices/timer.h>
+#include <proto/exec.h>
+#include <proto/timer.h>
+#endif
+
 #include "amigavideodevice.h"
 
 /*************************************************************************
@@ -22,6 +29,83 @@ const std::vector<std::uint8_t> AmigaVideoDevice::SAA_long_delay
 {
 	0x7e, 0x73, 0x43, 0x32, 0x03, 0xff
 };
+
+/*************************************************************************
+**                                                                      **
+**                        constructur/destructor                        **
+**                                                                      **
+*************************************************************************/
+
+#ifdef __amiga__
+
+struct Device * TimerBase;
+struct IORequest timer_request;
+
+#endif
+
+AmigaVideoDevice::AmigaVideoDevice(
+	volatile std::uint8_t * io_address_param,
+	const std::uint16_t  *  io_offsets_param,
+	const unsigned int      y_shift_param) :
+	io_address(io_address_param),
+	io_offsets(io_offsets_param),
+	y_shift(y_shift_param)
+{
+#ifdef __amiga__
+	OpenDevice(TIMERNAME, UNIT_ECLOCK, &timer_request, 0);
+	TimerBase = timer_request.io_Device;
+
+	task     = FindTask(-1);
+	sig_bit  = AllocSignal(-1);
+	sig_mask = 1 << sig_bit;
+
+	static char name[10] = "AVG";
+
+	int_data.reserve(1024 * 1024);
+	interrupt.is_Node.ln_Type = NT_INTERRUPT;
+	interrupt.is_Node.ln_Name = name;
+	interrupt.is_Node.ln_Pri  = 0;
+	interrupt.is_Data         = this;
+	interrupt.is_Code         = (decltype(interrupt.is_Code))(&AmigaVideoDevice::interrupt_handler);
+	AddIntServer(INTB_PORTS, &interrupt);
+#endif
+}
+
+AmigaVideoDevice::~AmigaVideoDevice()
+{
+#ifdef __amiga__
+	RemIntServer(INTB_PORTS, &interrupt);
+	FreeSignal(sig_bit);
+	CloseDevice(&timer_request);
+#endif
+}
+
+#ifdef __amiga__
+ULONG AmigaVideoDevice::interrupt_handler(AmigaVideoDevice * avd __asm("a1"))
+{
+	const std::uint8_t sync = avd->get_sync() & 3;
+	struct EClockVal   val;
+
+	ReadEClock(&val);
+
+	avd->counter++;
+	if (sync & VSYNC)
+	{
+		avd->vsync_counter++;
+	}
+	if (sync & HBLANK)
+	{
+		avd->hblank_counter++;
+	}
+
+	avd->int_data.push_back((val.ev_lo >> 16) & 0xff);
+	avd->int_data.push_back((val.ev_lo >>  8) & 0xff);
+	avd->int_data.push_back( val.ev_lo        & 0xff);
+	avd->int_data.push_back(sync);
+
+	return 0;
+}
+#endif
 
 /*************************************************************************
 **                                                                      **
@@ -69,7 +153,7 @@ void AmigaVideoDevice::init_norm(
 	config.control1.YPN  = 0;
 	config.control1.CCFR = 0;
 
-	config.control2.VNL = params[input].vnl;
+	config.control2.VNL = 1;
 	config.control2.OEY = 1;
 	config.control2.OEC = color;
 	config.control2.CI  = 0;
@@ -96,17 +180,17 @@ Saa9051Status AmigaVideoDevice::get_status_byte()
 	return status;
 }
 
-void AmigaVideoDevice::scan_sync(
-	std::vector<std::uint8_t> & sync_vector,
-	const unsigned              max)
+void AmigaVideoDevice::scan_sync(const unsigned max)
 {
+	sync_data.reserve(sync_data.size() + max);
+
 	for (unsigned i = 0; i < max; i++)
 	{
-		sync_vector.push_back(get_sync() & (VSYNC | HBLANK));
+		sync_data.push_back(get_sync() & (VSYNC | HBLANK));
 	}
 }
 
-bool AmigaVideoDevice::wait(
+unsigned AmigaVideoDevice::wait(
 	const std::uint32_t mask,
 	const bool          set,
 	const unsigned      timeout)
@@ -116,48 +200,66 @@ bool AmigaVideoDevice::wait(
 
 	for (unsigned i = 0; i < timeout; i++)
 	{
-		if ((*ptr & mask) == cmp)
+		const std::uint8_t byte = *ptr;
+
+#ifdef _DEBUG
+		sync_data.push_back(byte & (VSYNC | HBLANK));
+#endif
+
+		if ((byte & mask) == cmp)
 		{
-			return true;
+			return i;
 		}
 	}
-	return false;
-}
-
-inline bool AmigaVideoDevice::wait_hblank(const bool set)
-{
-	return wait(HBLANK, set, HBLANK_TIMEOUT);
+	return timeout;
 }
 
 inline bool AmigaVideoDevice::wait_vsync(const bool set)
 {
-	return wait(VSYNC, set, VSYNC_TIMEOUT);
+	const unsigned timeout = set ? VSYNC_TIMEOUT : 10 * HLINE_TIMEOUT;
+
+	return wait(VSYNC, set, timeout) < timeout;
 }
 
-#define DBEQ  false
-#define DBNE  true
+inline bool AmigaVideoDevice::wait_hblank()
+{
+	return wait(HBLANK, false, HBLANK_TIMEOUT) < HBLANK_TIMEOUT;
+}
 
 bool AmigaVideoDevice::sync()
 {
-	if (!wait_vsync(DBNE))
+	bool success;
+
+	sync_data.reserve(sync_data.size() + VSYNC_TIMEOUT * 15);
+	if (!wait_vsync(true))
 	{
 		return false;
 	}
 
 	set_write_yuv();
-	wait_hblank(DBNE);
+	success = wait_vsync(false);
 	clr_write_yuv();
 
-	return wait_vsync(DBEQ);
+	if (!wait_hblank())
+	{
+		// Found second field, waiting for next first field.
+		wait_vsync(true);
+		success = wait_vsync(false) && wait_hblank();
+	}
+
+	if (success)
+	{
+		enable_write(true);
+	}
+	return success;
 }
 
 void AmigaVideoDevice::fill()
 {
 	enable_write(true);
-	wait(VSYNC,  DBNE);
-	wait(VSYNC,  DBEQ);
-	wait(VSYNC,  DBNE);
-//	wait(VSYNC,  DBEQ);
+	wait(VSYNC,  true);
+	wait(VSYNC,  false);
+	wait(VSYNC,  true);
 	enable_write(false);
 }
 
@@ -225,7 +327,7 @@ bool AmigaVideoDevice::select_input(const unsigned new_input)
 
 	Saa9051Config config{};
 
-	config.control2.VNL = params[input].vnl;
+	config.control2.VNL = 1;
 	config.control2.OEY = 1;
 	config.control2.OEC = 1;
 	config.control2.CI  = 0;
