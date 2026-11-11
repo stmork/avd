@@ -159,9 +159,6 @@ public:
 	static constexpr unsigned     VSYNC_TIMEOUT     = HLINE_TIMEOUT * 625 / 2;
 
 	static constexpr unsigned     MAX_VIDEO_INPUTS  =   2;
-	unsigned                      counter           =   0;
-	unsigned                      vsync_counter     =   0;
-	unsigned                      hblank_counter    =   0;
 	std::vector<std::uint8_t>     int_data;
 	std::vector<std::uint8_t>     sync_data;
 
@@ -183,7 +180,6 @@ public:
 
 	bool sync();
 
-	void fill();
 	void read_y(std::vector<std::uint8_t> & yData);
 	void read_yuv(
 		std::vector<std::uint8_t> & yData,
@@ -252,6 +248,7 @@ private:
 	LONG             sig_bit;
 	ULONG            sig_mask;
 #endif
+	unsigned         wait_count = 0;
 };
 
 #endif // AVD_AMIGAVIDEODEVICE_H

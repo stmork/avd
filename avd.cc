@@ -97,9 +97,6 @@ int main()
 			printf("Waiting for sync...\n");
 			if (device->sync())
 			{
-				device->fill();
-				printf("Filled VRAM.\n");
-
 				std::vector<std::uint8_t> y;
 				std::vector<std::uint8_t> uv;
 
@@ -127,11 +124,10 @@ int main()
 			write(device->sync_data, "frame_sync.dat");
 			write(device->int_data,  "frame_int.dat");
 		}
-
-		printf("Int count: %u %u %u\n",
-			device->counter,
-			device->vsync_counter,
-			device->hblank_counter);
+	}
+	else
+	{
+		printf("No Amiga video digitizer found.\n");
 	}
 
 	return EXIT_SUCCESS;

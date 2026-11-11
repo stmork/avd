@@ -67,14 +67,14 @@ AmigaVideoDevice::AmigaVideoDevice(
 	interrupt.is_Node.ln_Pri  = 0;
 	interrupt.is_Data         = this;
 	interrupt.is_Code         = (decltype(interrupt.is_Code))(&AmigaVideoDevice::interrupt_handler);
-	AddIntServer(INTB_PORTS, &interrupt);
+	AddIntServer(INTB_VERTB, &interrupt);
 #endif
 }
 
 AmigaVideoDevice::~AmigaVideoDevice()
 {
 #ifdef __amiga__
-	RemIntServer(INTB_PORTS, &interrupt);
+	RemIntServer(INTB_VERTB, &interrupt);
 	FreeSignal(sig_bit);
 	CloseDevice(&timer_request);
 #endif
@@ -83,26 +83,15 @@ AmigaVideoDevice::~AmigaVideoDevice()
 #ifdef __amiga__
 ULONG AmigaVideoDevice::interrupt_handler(AmigaVideoDevice * avd __asm("a1"))
 {
-	const std::uint8_t sync = avd->get_sync() & 3;
-	struct EClockVal   val;
-
-	ReadEClock(&val);
-
-	avd->counter++;
-	if (sync & VSYNC)
+	if (avd->wait_count > 0)
 	{
-		avd->vsync_counter++;
+		avd->wait_count--;
+		if (avd->wait_count == 0)
+		{
+			avd->enable_write(false);
+			Signal(avd->task, avd->sig_mask);
+		}
 	}
-	if (sync & HBLANK)
-	{
-		avd->hblank_counter++;
-	}
-
-	avd->int_data.push_back((val.ev_lo >> 16) & 0xff);
-	avd->int_data.push_back((val.ev_lo >>  8) & 0xff);
-	avd->int_data.push_back( val.ev_lo        & 0xff);
-	avd->int_data.push_back(sync);
-
 	return 0;
 }
 #endif
@@ -230,7 +219,10 @@ bool AmigaVideoDevice::sync()
 {
 	bool success;
 
+#ifdef _DEBUG
 	sync_data.reserve(sync_data.size() + VSYNC_TIMEOUT * 15);
+#endif
+
 	if (!wait_vsync(true))
 	{
 		return false;
@@ -250,17 +242,9 @@ bool AmigaVideoDevice::sync()
 	if (success)
 	{
 		enable_write(true);
+		wait_count = 2;
 	}
 	return success;
-}
-
-void AmigaVideoDevice::fill()
-{
-	enable_write(true);
-	wait(VSYNC,  true);
-	wait(VSYNC,  false);
-	wait(VSYNC,  true);
-	enable_write(false);
 }
 
 void AmigaVideoDevice::read_y(std::vector<std::uint8_t> & yData)
@@ -283,6 +267,7 @@ void AmigaVideoDevice::read_y(std::vector<std::uint8_t> & yData)
 			yData.push_back(yyyy         & 0xff);
 		}
 	}
+	enable_write(false);
 }
 
 void AmigaVideoDevice::read_yuv(
@@ -315,6 +300,7 @@ void AmigaVideoDevice::read_yuv(
 			uvData.push_back((uv_h << 4)   | (uv_l & 0x0f));
 		}
 	}
+	enable_write(false);
 }
 
 bool AmigaVideoDevice::select_input(const unsigned new_input)
