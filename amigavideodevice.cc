@@ -36,22 +36,19 @@ const std::vector<std::uint8_t> AmigaVideoDevice::SAA_long_delay
 
 AmigaVideoDevice::AmigaVideoDevice(
 	volatile std::uint8_t * io_address_param,
-	const std::uint16_t  *  io_offsets_param,
-	const unsigned int      y_shift_param) :
+	const AvdDeviceInfo  *  info) :
 	io_address(io_address_param),
-	io_offsets(io_offsets_param),
-	y_shift(y_shift_param)
+	io_offsets(info->io_offsets),
+	y_shift(info->y_shift)
 {
 #ifdef __amiga__
 	task     = FindTask(-1);
 	sig_bit  = AllocSignal(-1);
 	sig_mask = 1 << sig_bit;
 
-	static char name[10] = "AVG";
-
 	int_data.reserve(1024 * 1024);
 	interrupt.is_Node.ln_Type = NT_INTERRUPT;
-	interrupt.is_Node.ln_Name = name;
+	interrupt.is_Node.ln_Name = const_cast<decltype(interrupt.is_Node.ln_Name)>(info->name);
 	interrupt.is_Node.ln_Pri  = 0;
 	interrupt.is_Data         = this;
 	interrupt.is_Code         = (decltype(interrupt.is_Code))(&AmigaVideoDevice::interrupt_handler);

@@ -165,8 +165,7 @@ public:
 	AmigaVideoDevice() = delete;
 	AmigaVideoDevice(
 		volatile std::uint8_t * io_address_param,
-		const std::uint16_t  *  io_offsets_param,
-		const unsigned          y_shift_param = 0);
+		const AvdDeviceInfo  *  info);
 
 	~AmigaVideoDevice();
 
