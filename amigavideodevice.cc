@@ -7,9 +7,7 @@
 
 #ifdef __amiga__
 #include <hardware/intbits.h>
-#include <devices/timer.h>
 #include <proto/exec.h>
-#include <proto/timer.h>
 #endif
 
 #include "amigavideodevice.h"
@@ -36,13 +34,6 @@ const std::vector<std::uint8_t> AmigaVideoDevice::SAA_long_delay
 **                                                                      **
 *************************************************************************/
 
-#ifdef __amiga__
-
-struct Device * TimerBase;
-struct IORequest timer_request;
-
-#endif
-
 AmigaVideoDevice::AmigaVideoDevice(
 	volatile std::uint8_t * io_address_param,
 	const std::uint16_t  *  io_offsets_param,
@@ -52,9 +43,6 @@ AmigaVideoDevice::AmigaVideoDevice(
 	y_shift(y_shift_param)
 {
 #ifdef __amiga__
-	OpenDevice(TIMERNAME, UNIT_ECLOCK, &timer_request, 0);
-	TimerBase = timer_request.io_Device;
-
 	task     = FindTask(-1);
 	sig_bit  = AllocSignal(-1);
 	sig_mask = 1 << sig_bit;
@@ -76,7 +64,6 @@ AmigaVideoDevice::~AmigaVideoDevice()
 #ifdef __amiga__
 	RemIntServer(INTB_VERTB, &interrupt);
 	FreeSignal(sig_bit);
-	CloseDevice(&timer_request);
 #endif
 }
 

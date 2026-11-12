@@ -69,3 +69,6 @@ Testing/
 
 # Qt
 CMakeLists.txt.user
+
+# AVD
+frame_*
