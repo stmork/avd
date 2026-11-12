@@ -238,20 +238,16 @@ void AmigaVideoDevice::read_y(std::vector<std::uint8_t> & yData)
 {
 	reset_read_yuv();
 	yData.clear();
-	yData.reserve(xSize * ySize);
+	yData.resize(xSize * ySize);
 
 	volatile const std::uint32_t * yPtr = address<std::uint32_t>(AvdDeviceInfo::IoIndex::VRAM_READINCY);
+	std::uint32_t         *        lPtr = reinterpret_cast<std::uint32_t *>(yData.data());
 
 	for (unsigned y = 0; y < ySize; y++)
 	{
 		for (unsigned x = 0; x < xSize; x += 4)
 		{
-			const std::uint32_t yyyy = *yPtr << y_shift;
-
-			yData.push_back((yyyy >> 24) & 0xff);
-			yData.push_back((yyyy >> 16) & 0xff);
-			yData.push_back((yyyy >>  8) & 0xff);
-			yData.push_back(yyyy         & 0xff);
+			*lPtr++ = *yPtr << y_shift;
 		}
 	}
 	enable_write(false);
@@ -263,28 +259,26 @@ void AmigaVideoDevice::read_yuv(
 {
 	reset_read_yuv();
 	yData.clear();
-	yData.reserve(xSize * ySize);
+	yData.resize(xSize * ySize);
 	uvData.clear();
-	uvData.reserve(xSize * ySize / 2);
+	uvData.resize(xSize * ySize / 2);
 
 	volatile const std::uint32_t * yPtr  = address<std::uint32_t>(AvdDeviceInfo::IoIndex::VRAM_READINCY);
 	volatile const std::uint8_t  * uvPtr = address<std::uint8_t>( AvdDeviceInfo::IoIndex::VRAM_READINCUV);
+	std::uint32_t         *        lPtr = reinterpret_cast<std::uint32_t *>(yData.data());
+	std::uint16_t         *        wPtr = reinterpret_cast<std::uint16_t *>(uvData.data());
 
 	for (unsigned y = 0; y < ySize; y++)
 	{
 		for (unsigned x = 0; x < xSize; x += 4)
 		{
-			const std::uint32_t yyyy = *yPtr << y_shift;
-			const std::uint8_t  uv_h = *uvPtr;
-			const std::uint8_t  uv_l = *uvPtr;
+			const std::uint16_t  uv_h = *uvPtr;
+			const std::uint16_t  uv_l = *uvPtr;
 
-			yData.push_back((yyyy >> 24) & 0xff);
-			yData.push_back((yyyy >> 16) & 0xff);
-			yData.push_back((yyyy >>  8) & 0xff);
-			yData.push_back(yyyy         & 0xff);
-
-			uvData.push_back((uv_h & 0xf0) | (uv_l >> 4));
-			uvData.push_back((uv_h << 4)   | (uv_l & 0x0f));
+			*lPtr++ = *yPtr << y_shift;
+			*wPtr++ =
+				((uv_h & 0xf0) << 8) | ((uv_l & 0xf0) << 4) |
+				((uv_h & 0x0f) << 4) |  (uv_l & 0x0f);
 		}
 	}
 	enable_write(false);
