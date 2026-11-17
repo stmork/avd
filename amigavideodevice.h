@@ -152,7 +152,7 @@ class AmigaVideoDevice : protected I2CDevice
 
 public:
 	static constexpr unsigned     xSize             = 720;
-	static constexpr unsigned     ySize             = 625;
+	unsigned                      ySize             = 625;
 
 	static constexpr unsigned     HLINE_TIMEOUT     = 128;
 	static constexpr unsigned     HBLANK_TIMEOUT    =   5;

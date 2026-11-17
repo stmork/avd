@@ -111,6 +111,8 @@ void AmigaVideoDevice::init_norm(
 
 	Saa9051Config config{};
 
+	ySize = ntsc ? 525 : 625;
+
 	config.horizontal_peaking.PF  = params[input].prefilter;
 	config.horizontal_peaking.BY  = 0;
 	config.horizontal_peaking.BP  = params[input].bandpass;
