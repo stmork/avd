@@ -1,8 +1,8 @@
-name: Build Amiga Video Digitizer for test purposes
+name: Amiga Video Digitizer for Linux
 on: [push]
 
 jobs:
-  AVD-Ubuntu:
+  AVD-Linux:
     permissions:
       contents: read
       packages: read

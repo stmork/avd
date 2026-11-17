@@ -1,0 +1,23 @@
+name: Amiga Video Digitizer for AmigaOS
+on: [push]
+
+jobs:
+  AVD-AmigaOS:
+    permissions:
+      contents: read
+      packages: read
+    runs-on: ubuntu-latest
+    container:
+      image: amigadev/crosstools:m68k-amigaos
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+      - name: Checkout CMake Toolchain-Files
+        uses: actions/checkout@v6
+        with:
+          repository: AmigaPorts/AmigaCMakeCrossToolchains
+          path: amiga-cmake
+      - name: CMake
+        run: cmake -B build -DCMAKE_TOOLCHAIN_FILE=amiga-cmake/m68k-amigaos.cmake
+      - name: Build
+        run: make -C build
