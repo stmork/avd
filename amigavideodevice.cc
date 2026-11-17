@@ -225,8 +225,8 @@ bool AmigaVideoDevice::sync()
 
 	if (success)
 	{
+		wait_count = 2;  // Prolongue counter to prevent vram write disable
 		enable_write(true);
-		wait_count = 2;
 	}
 	return success;
 }

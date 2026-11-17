@@ -8,32 +8,22 @@
 #ifndef AVD_TIMER_H
 #define AVD_TIMER_H
 
-#include <sys/time.h>
-
-#ifdef __amiga__
-#include <devices/timer.h>
-#endif
+#include <time.h>
 
 class AvdTimer
 {
-#ifdef __amiga__
-	static const unsigned ECLOCK_HZ = 709379;
-
-	struct IORequest      timer_request;
-#endif
-
-	struct timeval        start;
+	struct timespec       start;
 
 public:
+
 	AvdTimer();
-	~AvdTimer();
 
 	void          reset();
 	double        diff() const;
 
-	static void   get(struct timeval & tv);
-	static void   print(const struct timeval & tv);
-	static double getDouble(const struct timeval & tv);
+	static void   get(struct timespec & tv);
+	static void   print(const struct timespec & tv);
+	static double getDouble(const struct timespec & tv);
 };
 
 #endif // AVD_TIMER_H
