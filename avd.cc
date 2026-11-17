@@ -129,7 +129,6 @@ int main()
 				printf("No sync found!\n");
 			}
 			write(device->sync_data, "frame_sync.dat");
-			write(device->int_data,  "frame_int.dat");
 		}
 	}
 	else

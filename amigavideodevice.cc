@@ -46,7 +46,6 @@ AmigaVideoDevice::AmigaVideoDevice(
 	sig_bit  = AllocSignal(-1);
 	sig_mask = 1 << sig_bit;
 
-	int_data.reserve(1024 * 1024);
 	interrupt.is_Node.ln_Type = NT_INTERRUPT;
 	interrupt.is_Node.ln_Name = const_cast<decltype(interrupt.is_Node.ln_Name)>(info->name);
 	interrupt.is_Node.ln_Pri  = 0;
@@ -114,7 +113,7 @@ void AmigaVideoDevice::init_norm(
 	ySize = ntsc ? 525 : 625;
 
 	config.horizontal_peaking.PF  = params[input].prefilter;
-	config.horizontal_peaking.BY  = 0;
+	config.horizontal_peaking.BY  = !color;
 	config.horizontal_peaking.BP  = params[input].bandpass;
 	config.horizontal_peaking.COR = params[input].coring;
 	config.horizontal_peaking.AP  = params[input].weighting;
@@ -134,7 +133,10 @@ void AmigaVideoDevice::init_norm(
 	config.control2.CI  = 0;
 	config.control2.SS  = input;
 
-	config.control3.value = 0;
+	config.control3.SYC = 0;
+	config.control3.CT  = 0;
+	config.control3.YC  = 0;
+	config.control3.YDL = 0;
 	config.secam_delay_compensation = 0;
 
 	saa_slave_receiver.insert(saa_slave_receiver.end(),

@@ -85,11 +85,11 @@ union Saa9051Config
 		{
 			struct
 			{
-				std::uint8_t SYC  : 1;
-				std::uint8_t CT   : 1;
-				std::uint8_t YC   : 1;
-				std::uint8_t SS   : 2;
-				std::uint8_t YDL  : 3;
+				std::uint8_t SYC : 1;
+				std::uint8_t CT  : 1;
+				std::uint8_t YC  : 1;
+				std::uint8_t SS  : 2;
+				std::int8_t YDL  : 3;
 			};
 			std::uint8_t value;
 		} control3;
@@ -125,7 +125,7 @@ struct Saa9051Param
 		WEIGHT_1
 	};
 
-	Bandpass    bandpass  = BP_4_1;
+	Bandpass    bandpass  = BP_3_8;
 	Coring      coring    = COR_OFF;
 	Weighting   weighting = WEIGHT_0;
 	std::int8_t hue       = 0;
@@ -159,7 +159,6 @@ public:
 	static constexpr unsigned     VSYNC_TIMEOUT     = HLINE_TIMEOUT * 625 / 2;
 
 	static constexpr unsigned     MAX_VIDEO_INPUTS  =   2;
-	std::vector<std::uint8_t>     int_data;
 	std::vector<std::uint8_t>     sync_data;
 
 	AmigaVideoDevice() = delete;
