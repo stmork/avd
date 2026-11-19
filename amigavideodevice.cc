@@ -41,6 +41,11 @@ AmigaVideoDevice::AmigaVideoDevice(
 	io_offsets(info->io_offsets),
 	y_shift(info->y_shift)
 {
+	set_write_yuv();
+	enable_write(false);
+	reset_read_yuv();
+	clr_write_yuv();
+
 #ifdef __amiga__
 	task     = FindTask(-1);
 	sig_bit  = AllocSignal(-1);
@@ -110,7 +115,7 @@ void AmigaVideoDevice::init_norm(
 
 	Saa9051Config config{};
 
-	ySize = ntsc ? 525 : 625;
+	ySize = ntsc ? LINES_NTSC : LINES_PAL;
 
 	config.horizontal_peaking.PF  = params[input].prefilter;
 	config.horizontal_peaking.BY  = !color;
@@ -124,8 +129,8 @@ void AmigaVideoDevice::init_norm(
 	config.control1.VTR  = params[input].vtr;
 	config.control1.CO   = color;
 	config.control1.ALT  = !ntsc;
-	config.control1.YPN  = 0;
-	config.control1.CCFR = 0;
+	config.control1.YPN  = params[input].frequency != Saa9051Param::PAL_G;
+	config.control1.CCFR = params[input].frequency;
 
 	config.control2.VNL = 1;
 	config.control2.OEY = 1;
@@ -148,7 +153,7 @@ void AmigaVideoDevice::init_norm(
 Saa9051Status AmigaVideoDevice::get_status_byte()
 {
 	static const std::vector<std::uint8_t> saa_slave_transmitter { SAA_SLAVE_ADDRESS | 1 };
-	std::vector<std::uint8_t> rx_data   = { 0 };
+	std::vector<std::uint8_t>              rx_data { 0 };
 
 	receive(saa_slave_transmitter, rx_data);
 	Saa9051Status status;
@@ -266,8 +271,8 @@ void AmigaVideoDevice::read_yuv(
 
 	volatile const std::uint32_t * yPtr  = address<std::uint32_t>(AvdDeviceInfo::IoIndex::VRAM_READINCY);
 	volatile const std::uint8_t  * uvPtr = address<std::uint8_t>( AvdDeviceInfo::IoIndex::VRAM_READINCUV);
-	std::uint32_t         *        lPtr = reinterpret_cast<std::uint32_t *>(yData.data());
-	std::uint16_t         *        wPtr = reinterpret_cast<std::uint16_t *>(uvData.data());
+	std::uint32_t         *        lPtr  = reinterpret_cast<std::uint32_t *>(yData.data());
+	std::uint16_t         *        wPtr  = reinterpret_cast<std::uint16_t *>(uvData.data());
 
 	for (unsigned y = 0; y < ySize; y++)
 	{

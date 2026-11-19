@@ -125,9 +125,21 @@ struct Saa9051Param
 		WEIGHT_1
 	};
 
+	enum Carrier : std::uint8_t
+	{
+		PAL_B = 0,
+		PAL_G = 0,
+		PAL_H = 0,
+		PAL_I = 0,
+		PAL_M,
+		PAL_N,
+		NTSC_M
+	};
+
 	Bandpass    bandpass  = BP_3_8;
 	Coring      coring    = COR_OFF;
 	Weighting   weighting = WEIGHT_0;
+	Carrier     frequency = PAL_G;
 	std::int8_t hue       = 0;
 	bool        prefilter = true;
 	bool        vtr       = true;
@@ -152,7 +164,9 @@ class AmigaVideoDevice : protected I2CDevice
 
 public:
 	static constexpr unsigned     xSize             = 720;
-	unsigned                      ySize             = 625;
+	static constexpr unsigned     LINES_PAL         = 625;
+	static constexpr unsigned     LINES_NTSC        = 525;
+	unsigned                      ySize             = LINES_PAL;
 
 	static constexpr unsigned     HLINE_TIMEOUT     = 128;
 	static constexpr unsigned     HBLANK_TIMEOUT    =   5;

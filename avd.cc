@@ -65,24 +65,24 @@ int main()
 		AvdTimer                  timer;
 
 		status = device->get_status_byte();
-		printf("Status: 0x%02x\n", status.value);
-		device->init();
-		device->select_input(0);
-
-		// Wait for power on and hlock
-		printf("%0.06lfs\n", timer.diff());
-		usleep(250000);
-		printf("%0.06lfs Scanning sync values...\n", timer.diff());
-
-		device->scan_sync(625 * AmigaVideoDevice::HLINE_TIMEOUT);
-
-		status = device->get_status_byte();
 		printf("%0.06lfs Status: 0x%02x\n", timer.diff(), status.value);
-
 		if (status.PONRES)
 		{
 			printf("Ongoing Reset\n");
 		}
+		device->init();
+		device->select_input(0);
+
+		// Wait for power on and hlock
+		if (status.PONRES)
+		{
+			printf("%0.06lfs\n", timer.diff());
+			usleep(250000);
+		}
+
+		status = device->get_status_byte();
+		printf("%0.06lfs Status: 0x%02x\n", timer.diff(), status.value);
+
 		if (status.HLOCK)
 		{
 			printf("Warning: No horizontal sync detected!\n");
@@ -99,6 +99,9 @@ int main()
 			}
 			printf("%0.06lfs Initializing norm...\n", timer.diff());
 			device->init_norm(status.CD, status.FD);
+
+			printf("%0.06lfs Scanning sync values...\n", timer.diff());
+			device->scan_sync(625 * AmigaVideoDevice::HLINE_TIMEOUT);
 
 			printf("%0.06lfs Waiting for sync...\n", timer.diff());
 			if (device->sync())
