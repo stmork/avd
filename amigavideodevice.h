@@ -201,8 +201,8 @@ public:
 	void select_param(const Saa9051Param & new_param);
 
 protected:
-	virtual void clock(const std::uint8_t scl) override;
-	virtual void set_data(const std::uint8_t sda) override;
+	virtual void         set_clock(const std::uint8_t scl) override;
+	virtual void         set_data(const std::uint8_t sda) override;
 	virtual std::uint8_t get_ack() const override;
 	virtual std::uint8_t get_data() const override;
 

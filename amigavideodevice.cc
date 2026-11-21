@@ -325,7 +325,7 @@ void AmigaVideoDevice::select_param(const Saa9051Param & new_param)
 **                                                                      **
 *************************************************************************/
 
-void AmigaVideoDevice::clock(const std::uint8_t scl)
+void AmigaVideoDevice::set_clock(const std::uint8_t scl)
 {
 	state = (state & SDA) | (scl ? SCL : 0);
 

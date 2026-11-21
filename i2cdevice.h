@@ -41,7 +41,7 @@ public:
 protected:
 	virtual ~I2CDevice() = default;
 
-	virtual void         clock(const std::uint8_t state) = 0;
+	virtual void         set_clock(const std::uint8_t state) = 0;
 	virtual void         set_data(const std::uint8_t bit) = 0;
 	virtual std::uint8_t get_ack() const = 0;
 	virtual std::uint8_t get_data() const = 0;

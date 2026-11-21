@@ -16,15 +16,15 @@
 #include "videodevicefactory.h"
 #include "avddeviceinfo.h"
 
+#ifdef _DEBUG
 namespace
 {
 	static std::uint8_t io_addresses[65536];
 }
+#endif
 
 VideoDeviceFactory::VideoDeviceFactory()
 {
-	memset(io_addresses, 0x7f, sizeof(io_addresses));
-
 #ifdef __amiga__
 	ExpansionBase = reinterpret_cast<struct ExpansionBase *>(OpenLibrary("expansion.library", 0));
 
@@ -48,6 +48,8 @@ VideoDeviceFactory::VideoDeviceFactory()
 #ifdef _DEBUG
 	if (devices.empty())
 	{
+		memset(io_addresses, 0x7f, sizeof(io_addresses));
+
 		find_device(AutoConfigKey(2157, 7), io_addresses);
 	}
 #endif

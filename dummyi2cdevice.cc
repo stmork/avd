@@ -2,7 +2,7 @@
 
 #include "dummyi2cdevice.h"
 
-void DummyI2cDevice::clock(const std::uint8_t scl)
+void DummyI2cDevice::set_clock(const std::uint8_t scl)
 {
 	state = (state & SDA) | (scl ? SCL : 0);
 	print();
