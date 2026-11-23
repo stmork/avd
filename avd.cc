@@ -89,6 +89,14 @@ int main()
 		}
 		else
 		{
+			std::vector<std::uint8_t> y;
+			std::vector<std::uint8_t> uv;
+
+			y.clear();
+			y.resize(device->xSize * device->ySize);
+			uv.clear();
+			uv.resize(device->xSize * device->ySize / 2);
+
 			printf("%0.06lfs Field frequency: %d Hz, %s\n",
 				timer.diff(),
 				status.FD ? 60 : 50,
@@ -106,10 +114,7 @@ int main()
 			printf("%0.06lfs Waiting for sync...\n", timer.diff());
 			if (device->sync())
 			{
-				std::vector<std::uint8_t> y;
-				std::vector<std::uint8_t> uv;
-
-				printf("%0.06lfs Reading VRAM...\n", timer.diff());
+				const double start = timer.diff();
 				if (status.CD)
 				{
 					device->read_yuv(y, uv);
@@ -118,8 +123,10 @@ int main()
 				{
 					device->read_y(y);
 				}
+				const double end = timer.diff();
 
-				printf("%0.06lfs Writing data to files...\n", timer.diff());
+				printf("%0.06lfs Reading VRAM...\n", start);
+				printf("%0.06lfs Writing data to files...\n", end);
 				write(y,  "frame_y.dat");
 				if (status.CD)
 				{

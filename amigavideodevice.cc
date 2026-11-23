@@ -39,7 +39,8 @@ AmigaVideoDevice::AmigaVideoDevice(
 	const AvdDeviceInfo  *  info) :
 	io_address(io_address_param),
 	io_offsets(info->io_offsets),
-	y_shift(info->y_shift)
+	y_shift(info->y_shift),
+	uv_convert(info->uv_convert)
 {
 	set_write_yuv();
 	enable_write(false);
@@ -71,6 +72,7 @@ AmigaVideoDevice::~AmigaVideoDevice()
 #ifdef __amiga__
 ULONG AmigaVideoDevice::interrupt_handler(AmigaVideoDevice * avd __asm("a1"))
 {
+	avd->irq_counter++;
 	if (avd->wait_count > 0)
 	{
 		avd->wait_count--;
@@ -234,7 +236,8 @@ bool AmigaVideoDevice::sync()
 
 	if (success)
 	{
-		wait_count = 2;  // Prolongue counter to prevent vram write disable
+		irq_counter = 0;
+		wait_count  = 3;  // Prolongue counter to prevent vram write disable
 		enable_write(true);
 	}
 	return success;
@@ -264,10 +267,6 @@ void AmigaVideoDevice::read_yuv(
 	std::vector<std::uint8_t> & uvData)
 {
 	reset_read_yuv();
-	yData.clear();
-	yData.resize(xSize * ySize);
-	uvData.clear();
-	uvData.resize(xSize * ySize / 2);
 
 	volatile const std::uint32_t * yPtr  = address<std::uint32_t>(AvdDeviceInfo::IoIndex::VRAM_READINCY);
 	volatile const std::uint8_t  * uvPtr = address<std::uint8_t>( AvdDeviceInfo::IoIndex::VRAM_READINCUV);
@@ -278,13 +277,15 @@ void AmigaVideoDevice::read_yuv(
 	{
 		for (unsigned x = 0; x < xSize; x += 4)
 		{
-			const std::uint16_t  uv_h = *uvPtr;
-			const std::uint16_t  uv_l = *uvPtr;
+			const std::uint8_t  uv_h = *uvPtr;
+			const std::uint8_t  uv_l = *uvPtr;
 
 			*lPtr++ = *yPtr << y_shift;
-			*wPtr++ =
-				((uv_h & 0xf0) << 8) | ((uv_l & 0xf0) << 4) |
-				((uv_h & 0x0f) << 4) |  (uv_l & 0x0f);
+			*wPtr++ = uv_convert(uv_h, uv_l);
+		}
+		if (y == 60)
+		{
+			enable_write(false);
 		}
 	}
 	enable_write(false);

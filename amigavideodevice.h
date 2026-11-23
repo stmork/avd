@@ -159,6 +159,8 @@ class AmigaVideoDevice : protected I2CDevice
 	const    std::uint16_t    *   io_offsets        = nullptr;
 	const    unsigned             y_shift           =   0;
 
+	const    AvdDeviceInfo::uvConversionFunc     uv_convert = nullptr;
+
 	std::uint8_t                  state             =   0;
 	std::uint8_t                  input             =   0;
 
@@ -260,7 +262,8 @@ private:
 	LONG             sig_bit;
 	ULONG            sig_mask;
 #endif
-	unsigned         wait_count = 0;
+	unsigned         irq_counter = 0;
+	unsigned         wait_count  = 0;
 };
 
 #endif // AVD_AMIGAVIDEODEVICE_H

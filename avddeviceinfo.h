@@ -11,9 +11,12 @@
 #include <cstdint>
 #include <type_traits>
 #include <unordered_map>
+#include <functional>
 
 struct AvdDeviceInfo
 {
+	typedef std::function<std::uint16_t(const std::uint16_t, const std::uint16_t)> uvConversionFunc;
+
 	enum class IoIndex : unsigned
 	{
 		I2C_BUSSEND,
@@ -39,6 +42,7 @@ struct AvdDeviceInfo
 	const std::uint16_t vendor_id;
 	const std::uint8_t  product_id;
 	const unsigned      y_shift = 0;
+	uvConversionFunc    uv_convert;
 };
 
 // This is a shortcut to of the key map.

@@ -25,7 +25,13 @@ namespace
 			0x4501
 		},
 		2157, 7,
-		1
+		1,
+		[](const std::uint16_t uv_h, const std::uint16_t uv_l) -> std::uint16_t
+		{
+			return
+				((uv_h & 0xf0) << 8) | ((uv_l & 0xf0) << 4) |
+				((uv_h & 0x0f) << 4) |  (uv_l & 0x0f);
+		}
 	};
 
 	const AvdDeviceInfo AVD_VLAB_INFO
@@ -46,7 +52,19 @@ namespace
 			0x2301
 		},
 		18260, 4,
-		0
+		0,
+		[](const std::uint16_t uv_h, const std::uint16_t uv_l) -> std::uint16_t
+		{
+			return
+				((uv_h & 0xc0) <<  8) |
+				((uv_h & 0x30) <<  2) |
+				((uv_h & 0x0c) << 10) |
+				((uv_h & 0x03) <<  4) |
+				((uv_l & 0xc0) <<  4) |
+				((uv_l & 0x30) >>  2) |
+				((uv_l & 0x0c) <<  6) |
+				((uv_l & 0x03) <<  0);
+		}
 	};
 }
 
