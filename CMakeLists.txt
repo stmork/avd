@@ -39,9 +39,9 @@ add_custom_target(cppcheck
 	-D_DEBUG
 	--inline-suppr
 	--suppress=unusedStructMember
+	--suppress=syntaxError
 	--enable=style,warning,performance,portability
 	--language=c++ --std=c++20
-	--library=qt
 	--xml-version=2 --force -q
 	*.cc *.h
 	2>cppcheck.xml

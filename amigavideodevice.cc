@@ -40,7 +40,7 @@ AmigaVideoDevice::AmigaVideoDevice(
 	io_address(io_address_param),
 	io_offsets(info->io_offsets),
 	y_shift(info->y_shift),
-	uv_convert(info->uv_convert)
+	uv_lut(info->uv_lut)
 {
 	set_write_yuv();
 	enable_write(false);
@@ -281,9 +281,9 @@ void AmigaVideoDevice::read_yuv(
 			const std::uint8_t  uv_l = *uvPtr;
 
 			*lPtr++ = *yPtr << y_shift;
-			*wPtr++ = uv_convert(uv_h, uv_l);
+			*wPtr++ = (uv_lut[uv_h] << 4) | uv_lut[uv_l];
 		}
-		if (y == 60)
+		if (y == 70)
 		{
 			enable_write(false);
 		}

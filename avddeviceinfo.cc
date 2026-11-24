@@ -7,7 +7,18 @@
 
 namespace
 {
-	const AvdDeviceInfo AVD_MVD819_INFO
+	static constexpr AvdDeviceInfo::UvLUT MVD819_UV_LUT = []() constexpr
+	{
+		AvdDeviceInfo::UvLUT lut;
+
+		for (AvdDeviceInfo::UvLUT::value_type uv = 0; uv < lut.size(); uv++)
+		{
+			lut[uv] = ((uv & 0xf0) << 4) | (uv & 0xf); // Split UV into low nibbles
+		}
+		return lut;
+	}();
+
+	static constexpr AvdDeviceInfo AVD_MVD819_INFO
 	{
 		"MVD 819",
 		{
@@ -26,15 +37,23 @@ namespace
 		},
 		2157, 7,
 		1,
-		[](const std::uint16_t uv_h, const std::uint16_t uv_l) -> std::uint16_t
-		{
-			return
-				((uv_h & 0xf0) << 8) | ((uv_l & 0xf0) << 4) |
-				((uv_h & 0x0f) << 4) |  (uv_l & 0x0f);
-		}
+		MVD819_UV_LUT
 	};
 
-	const AvdDeviceInfo AVD_VLAB_INFO
+	static constexpr AvdDeviceInfo::UvLUT VLab_UV_LUT = []()constexpr
+	{
+		AvdDeviceInfo::UvLUT lut;
+
+		for (AvdDeviceInfo::UvLUT::value_type uv = 0; uv < lut.size(); uv++)
+		{
+			lut[uv] =
+			((uv & 0xc0) << 4) | ((uv & 0x0c) << 6) | // U
+			((uv & 0x30) >> 2) |  (uv & 0x03); // V
+		}
+		return lut;
+	} ();
+
+	static constexpr AvdDeviceInfo AVD_VLAB_INFO
 	{
 		"VLab 1.0",
 		{
@@ -53,18 +72,7 @@ namespace
 		},
 		18260, 4,
 		0,
-		[](const std::uint16_t uv_h, const std::uint16_t uv_l) -> std::uint16_t
-		{
-			return
-				((uv_h & 0xc0) <<  8) |
-				((uv_h & 0x30) <<  2) |
-				((uv_h & 0x0c) << 10) |
-				((uv_h & 0x03) <<  4) |
-				((uv_l & 0xc0) <<  4) |
-				((uv_l & 0x30) >>  2) |
-				((uv_l & 0x0c) <<  6) |
-				((uv_l & 0x03) <<  0);
-		}
+		VLab_UV_LUT
 	};
 }
 

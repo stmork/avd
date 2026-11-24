@@ -159,7 +159,7 @@ class AmigaVideoDevice : protected I2CDevice
 	const    std::uint16_t    *   io_offsets        = nullptr;
 	const    unsigned             y_shift           =   0;
 
-	const    AvdDeviceInfo::uvConversionFunc     uv_convert = nullptr;
+	const  AvdDeviceInfo::UvLUT & uv_lut;
 
 	std::uint8_t                  state             =   0;
 	std::uint8_t                  input             =   0;

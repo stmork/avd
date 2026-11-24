@@ -11,11 +11,11 @@
 #include <cstdint>
 #include <type_traits>
 #include <unordered_map>
-#include <functional>
+#include <array>
 
 struct AvdDeviceInfo
 {
-	typedef std::function<std::uint16_t(const std::uint16_t, const std::uint16_t)> uvConversionFunc;
+	typedef std::array<std::uint16_t, 256> UvLUT;
 
 	enum class IoIndex : unsigned
 	{
@@ -42,7 +42,7 @@ struct AvdDeviceInfo
 	const std::uint16_t vendor_id;
 	const std::uint8_t  product_id;
 	const unsigned      y_shift = 0;
-	uvConversionFunc    uv_convert;
+	const UvLUT    &    uv_lut;
 };
 
 // This is a shortcut to of the key map.
