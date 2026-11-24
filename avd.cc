@@ -77,7 +77,7 @@ int main()
 		if (status.PONRES)
 		{
 			printf("%0.06lfs\n", timer.diff());
-			usleep(250000);
+			sleep(1);
 		}
 
 		status = device->get_status_byte();

@@ -35,9 +35,10 @@ namespace
 
 			0x4501
 		},
+		MVD819_UV_LUT,
 		2157, 7,
 		1,
-		MVD819_UV_LUT
+		false
 	};
 
 	static constexpr AvdDeviceInfo::UvLUT VLab_UV_LUT = []()constexpr
@@ -70,9 +71,10 @@ namespace
 
 			0x2301
 		},
+		VLab_UV_LUT,
 		18260, 4,
 		0,
-		VLab_UV_LUT
+		false
 	};
 }
 

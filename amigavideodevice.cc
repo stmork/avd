@@ -40,6 +40,8 @@ AmigaVideoDevice::AmigaVideoDevice(
 	io_address(io_address_param),
 	io_offsets(info->io_offsets),
 	y_shift(info->y_shift),
+	has_yc(info->has_yc),
+	max_input(AvdDeviceInfo::MAX_INPUTS - (has_yc ? 0 : 1)),
 	uv_lut(info->uv_lut)
 {
 	set_write_yuv();
@@ -120,7 +122,7 @@ void AmigaVideoDevice::init_norm(
 	ySize = ntsc ? LINES_NTSC : LINES_PAL;
 
 	config.horizontal_peaking.PF  = params[input].prefilter;
-	config.horizontal_peaking.BY  = !color;
+	config.horizontal_peaking.BY  = !color || (input == AvdDeviceInfo::Input::INPUT_YC);
 	config.horizontal_peaking.BP  = params[input].bandpass;
 	config.horizontal_peaking.COR = params[input].coring;
 	config.horizontal_peaking.AP  = params[input].weighting;
@@ -142,7 +144,7 @@ void AmigaVideoDevice::init_norm(
 
 	config.control3.SYC = 0;
 	config.control3.CT  = 0;
-	config.control3.YC  = 0;
+	config.control3.YC  = input == AvdDeviceInfo::Input::INPUT_YC;
 	config.control3.YDL = 0;
 	config.secam_delay_compensation = 0;
 
@@ -150,6 +152,36 @@ void AmigaVideoDevice::init_norm(
 		config.values, config.values + sizeof(config.values));
 
 	send(saa_slave_receiver);
+}
+
+bool AmigaVideoDevice::select_input(const unsigned new_input)
+{
+	if (new_input >= max_input)
+	{
+		return false;
+	}
+	input = static_cast<decltype(input)>(new_input);
+
+	Saa9051Config config{};
+
+	config.control2.VNL = 1;
+	config.control2.OEY = 1;
+	config.control2.OEC = 1;
+	config.control2.CI  = 0;
+	config.control2.SS  = input;
+	config.control3.YC  = input == AvdDeviceInfo::Input::INPUT_YC;
+
+	const std::vector<std::uint8_t> saa_slave_receiver
+	{
+		SAA_SLAVE_ADDRESS, 0x09, config.control2.value, config.control3.value
+	};
+
+	return send(saa_slave_receiver);
+}
+
+void AmigaVideoDevice::select_param(const Saa9051Param & new_param)
+{
+	params[input] = new_param;
 }
 
 Saa9051Status AmigaVideoDevice::get_status_byte()
@@ -163,6 +195,12 @@ Saa9051Status AmigaVideoDevice::get_status_byte()
 	status.value = rx_data[0];
 	return status;
 }
+
+/*************************************************************************
+**                                                                      **
+**                        Frame sync an capture                         **
+**                                                                      **
+*************************************************************************/
 
 void AmigaVideoDevice::scan_sync(const unsigned max)
 {
@@ -289,35 +327,6 @@ void AmigaVideoDevice::read_yuv(
 		}
 	}
 	enable_write(false);
-}
-
-bool AmigaVideoDevice::select_input(const unsigned new_input)
-{
-	if (new_input >= MAX_VIDEO_INPUTS)
-	{
-		return false;
-	}
-	input = new_input;
-
-	Saa9051Config config{};
-
-	config.control2.VNL = 1;
-	config.control2.OEY = 1;
-	config.control2.OEC = 1;
-	config.control2.CI  = 0;
-	config.control2.SS  = input;
-
-	const std::vector<std::uint8_t> saa_slave_receiver
-	{
-		SAA_SLAVE_ADDRESS, 0x09, config.control2.value
-	};
-
-	return send(saa_slave_receiver);
-}
-
-void AmigaVideoDevice::select_param(const Saa9051Param & new_param)
-{
-	params[input] = new_param;
 }
 
 /*************************************************************************

@@ -158,11 +158,13 @@ class AmigaVideoDevice : protected I2CDevice
 	volatile std::uint8_t    *    io_address        = nullptr;
 	const    std::uint16_t    *   io_offsets        = nullptr;
 	const    unsigned             y_shift           =   0;
+	const    bool                 has_yc            = false;
+	const    unsigned             max_input;
 
 	const  AvdDeviceInfo::UvLUT & uv_lut;
 
 	std::uint8_t                  state             =   0;
-	std::uint8_t                  input             =   0;
+	AvdDeviceInfo::Input          input             =   AvdDeviceInfo::Input::INPUT_BOTTOM;
 
 public:
 	static constexpr unsigned     xSize             = 720;
@@ -174,8 +176,9 @@ public:
 	static constexpr unsigned     HBLANK_TIMEOUT    =   5;
 	static constexpr unsigned     VSYNC_TIMEOUT     = HLINE_TIMEOUT * 625 / 2;
 
-	static constexpr unsigned     MAX_VIDEO_INPUTS  =   2;
 	std::vector<std::uint8_t>     sync_data;
+	Saa9051Param                  params[size_t(AvdDeviceInfo::Input::MAX_INPUTS)];
+
 
 	AmigaVideoDevice() = delete;
 	AmigaVideoDevice(
@@ -251,8 +254,6 @@ private:
 	void         reset_read_yuv();
 	void         enable_write(const bool enable);
 	std::uint8_t get_sync() const;
-
-	Saa9051Param              params[MAX_VIDEO_INPUTS];
 
 #ifdef __amiga__
 	static ULONG interrupt_handler(AmigaVideoDevice * avd);

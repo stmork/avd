@@ -35,14 +35,24 @@ struct AvdDeviceInfo
 		IO_MAX_INDEX
 	};
 
+	enum Input : unsigned
+	{
+		INPUT_BOTTOM,
+		INPUT_TOP,
+		INPUT_YC,
+
+		MAX_INPUTS
+	};
+
 	using IoIndexType = std::underlying_type_t<IoIndex>;
 
 	const char     *    name;
 	const std::uint16_t io_offsets[(unsigned)IoIndex::IO_MAX_INDEX];
+	const UvLUT    &    uv_lut;
 	const std::uint16_t vendor_id;
 	const std::uint8_t  product_id;
 	const unsigned      y_shift = 0;
-	const UvLUT    &    uv_lut;
+	const bool          has_yc  = false;
 };
 
 // This is a shortcut to of the key map.
